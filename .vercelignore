@@ -3,3 +3,10 @@ dist
 recordings
 .recording
 *.tsbuildinfo
+.keys
+.env
+.env.*
+!.env.example
+contracts/out
+contracts/cache
+contracts/broadcast

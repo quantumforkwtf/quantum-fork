@@ -816,7 +816,7 @@ function LabBench() {
             ) : (
               'The lab · '
             )}
-            Ancestor: {ancestor === 'base' ? 'Base' : 'Solana'} · {tier === 'mainnet' ? 'Mainnet' : `${CLIENT_CONFIG.network} · test QFORK`}
+            Ancestor: {ancestor === 'base' ? 'Base' : 'Solana'} · {tier === 'mainnet' ? 'Mainnet' : `${chain === 'base' ? 'Base Sepolia' : 'Solana devnet'} · test QFORK`}
           </span>
         </p>
         <div className="lab-title">
