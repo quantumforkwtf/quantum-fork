@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CLIENT_CONFIG } from '../config'
-import { childrenOf, type Descendant, findDescendant, updateRemote, useRegistry } from '../lab/registry'
+import { burnChainOf, childrenOf, type Descendant, findDescendant, updateRemote, useRegistry } from '../lab/registry'
 import { fetchRemoteDeployment } from '../lab/testnet'
 import { navigate } from '../navigation'
 import { FlowError } from './failures'
@@ -56,7 +56,7 @@ export const networkHref = (id: string, tab: NetworkTab = 'overview') => (tab ==
 export function buildConsoleView(descendant: Descendant, registry: Descendant[], wallet: string | null, evmWallet: string | null = null): ConsoleView | null {
   if (descendant.origin !== 'registered' || !descendant.config) return null
   const config = descendant.config
-  const chain: Chain = descendant.receipt?.chain ?? descendant.deployment?.burn.chain ?? 'solana'
+  const chain = burnChainOf(descendant, 'solana')
   const cluster = (chain === 'base' ? CLIENT_CONFIG.network : (descendant.receipt?.network ?? descendant.deployment?.burn.network ?? CLIENT_CONFIG.network)) as KitCluster
   const owner = descendant.receipt?.wallet ?? null
   const owned = chain === 'base' ? Boolean(evmWallet && owner && owner.toLowerCase() === evmWallet.toLowerCase()) : Boolean(wallet && owner === wallet)

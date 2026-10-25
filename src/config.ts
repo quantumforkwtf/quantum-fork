@@ -23,6 +23,9 @@ function baseNetworkFor(network: string | undefined): BaseNetwork {
   return statusState.state === 'ok' ? (statusState.status.base?.network ?? 'base') : 'base'
 }
 
+/** True for networks where QFORK has value: Solana mainnet-beta and Base mainnet. */
+export const isMainnetNetwork = (network: string) => network === 'mainnet-beta' || network === 'base'
+
 export function explorerTx(signature: string, network: SolanaNetwork | BaseNetwork | string = CLIENT_CONFIG.network) {
   if (signature.startsWith('0x')) return baseExplorerTx(signature, baseNetworkFor(network))
   return `https://explorer.solana.com/tx/${signature}${network === 'mainnet-beta' ? '' : `?cluster=${network}`}`

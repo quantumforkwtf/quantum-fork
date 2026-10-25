@@ -1,7 +1,8 @@
+import type { Chain } from './base.js'
 import type { BurnOperation } from './blueprints.js'
 import type { DescendantConfig } from './descendant.js'
 import { MODULE_BY_ID } from './modules.js'
-import { type BurnLine, PRICING, quoteGenesis } from './pricing.js'
+import { type BurnLine, CHAIN_BURN_SCALE, PRICING, quoteGenesis } from './pricing.js'
 
 export interface BurnOperationSpec {
   id: Exclude<BurnOperation, 'NONE'>
@@ -34,14 +35,14 @@ export interface BurnEstimate {
 }
 
 /** Estimates the burn an operation would need. Pure: it never decides whether the burn can be executed. */
-export function estimateBurn(operation: BurnOperation, config: DescendantConfig | null): BurnEstimate {
+export function estimateBurn(operation: BurnOperation, config: DescendantConfig | null, chain: Chain = 'solana'): BurnEstimate {
   if (operation === 'NONE') return { operation, basis: 'FREE', lines: [], total: 0, note: 'No burn. Scanning and mapping are free.' }
   if ((operation === 'GENESIS' || operation === 'FORK') && config) {
-    const quote = quoteGenesis(config, operation)
+    const quote = quoteGenesis(config, operation, chain)
     return { operation, basis: 'PROVISIONAL', lines: quote.lines, total: quote.total, note: 'Estimated from provisional parameters that may change before token launch.' }
   }
   if (operation === 'MUTATION' && config) {
-    const lines = config.modules.map((id) => ({ label: `${MODULE_BY_ID[id].code} ${MODULE_BY_ID[id].name}`, amount: MODULE_BY_ID[id].burn }))
+    const lines = config.modules.map((id) => ({ label: `${MODULE_BY_ID[id].code} ${MODULE_BY_ID[id].name}`, amount: MODULE_BY_ID[id].burn * CHAIN_BURN_SCALE[chain] }))
     return { operation, basis: 'PROVISIONAL', lines, total: lines.reduce((sum, line) => sum + line.amount, 0), note: 'Module burns are provisional. Mutation is not implemented.' }
   }
   return { operation, basis: 'UNPRICED', lines: [], total: null, note: BURN_OPERATION_BY_ID[operation].detail }

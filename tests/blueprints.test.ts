@@ -5,6 +5,8 @@ import { blueprintLabHref, capabilityStatus, compileBlueprint, decodeAnswers, en
 import { BLUEPRINT_BY_SLUG, BLUEPRINTS, FEATURED_BLUEPRINTS, findBlueprint, INTENTS, STATUS_RANK } from '../src/protocol/blueprints'
 import { BURN_OPERATIONS, estimateBurn } from '../src/protocol/burnEngine'
 import { defaultConfig, descendantSchema, genomeDiff } from '../src/protocol/descendant'
+import { CHAIN_BURN_SCALE, quoteGenesis } from '../src/protocol/pricing'
+import { burnChainOf, type Descendant } from '../src/lab/registry'
 
 const bp = (slug: string) => BLUEPRINT_BY_SLUG[slug]
 
@@ -202,6 +204,22 @@ describe('burn engine', () => {
     expect(genesis.total).toBeGreaterThan(0)
     expect(estimateBurn('APPLICATION_MODULE', null)).toMatchObject({ basis: 'UNPRICED', total: null })
     expect(estimateBurn('NONE', null)).toMatchObject({ basis: 'FREE', total: 0 })
+  })
+
+  it('prices burns on Base at the chain scale, matching the Lab quote', () => {
+    const config = genomeToConfig(bp('quantum-chain').recommendedGenome) ?? defaultConfig()
+    const solana = estimateBurn('GENESIS', config)
+    const base = estimateBurn('GENESIS', config, 'base')
+    expect(base.total).toBe((solana.total ?? 0) * CHAIN_BURN_SCALE.base)
+    expect(base.total).toBe(quoteGenesis(config, 'GENESIS', 'base').total)
+    expect(compileBlueprint(bp('quantum-chain'), {}, { devnetBurn: false, burnChain: 'base' }).burn.total).toBe(compileBlueprint(bp('quantum-chain')).burn.total! * CHAIN_BURN_SCALE.base)
+  })
+
+  it('reads the burn chain from the record, defaulting legacy records to Solana', () => {
+    const draft = { id: 'x', receipt: null, deployment: null } as unknown as Descendant
+    expect(burnChainOf(draft, 'base')).toBe('base')
+    expect(burnChainOf({ ...draft, receipt: { chain: undefined } } as unknown as Descendant, 'base')).toBe('solana')
+    expect(burnChainOf({ ...draft, deployment: { burn: { chain: 'base' } } } as unknown as Descendant, 'solana')).toBe('base')
   })
 
   it('only genesis is executable today', () => {

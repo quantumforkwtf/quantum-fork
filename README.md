@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/badge/React_18-1b1b1b?style=flat-square&logo=react&logoColor=61dafb" alt="React">
 <img src="https://img.shields.io/badge/TypeScript-1b1b1b?style=flat-square&logo=typescript&logoColor=3178c6" alt="TypeScript">
 <img src="https://img.shields.io/badge/ML--DSA_·_SLH--DSA-1b1b1b?style=flat-square" alt="Post-quantum signatures">
-<img src="https://img.shields.io/badge/tests-229_passing-3dffa0?style=flat-square&labelColor=1b1b1b" alt="229 tests passing">
+<img src="https://img.shields.io/badge/tests-234_passing-3dffa0?style=flat-square&labelColor=1b1b1b" alt="234 tests passing">
 
 </div>
 
@@ -287,7 +287,7 @@ src/lib/evm/     Base history loader, fork RPC, transaction inspection
 src/three/       WebGL scenes
 api/             Vercel functions (configs, benchmarks, ghosts, og images, …)
 contracts/       QForkRegistry + benchmark workloads (Foundry)
-tests/           229 tests: protocol, replay against Base Sepolia, benchmarks, lineages, crypto
+tests/           234 tests: protocol, replay against Base Sepolia, benchmarks, lineages, crypto
 docs/            architecture, roadmap, feature status
 ```
 

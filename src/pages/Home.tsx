@@ -7,20 +7,22 @@ import ExposureMap from '../components/ExposureMap'
 import ModuleCard from '../components/ModuleCard'
 import { ModuleBadge, OriginBadge, Pill } from '../components/Status'
 import { OrganismThumb, ReactorViewport, SpecimenViewport } from '../components/Viewports'
-import { CLIENT_CONFIG, GITHUB_URL } from '../config'
+import { CLIENT_CONFIG, GITHUB_URL, useServerStatus } from '../config'
 import { blueprintVisual } from '../lab/blueprintVisual'
+import { useRuntime } from '../lab/runtime'
 import { genomeOf, useRegistry } from '../lab/registry'
 import { useScan } from '../lab/useScan'
 import { intentHref } from '../lib/build'
 import { FINDING_TONE } from '../lib/tones'
 import { usePrefersReducedMotion, useSeen, useMediaQuery, wait } from '../lib/hooks'
 import { usePageMeta } from '../lib/meta'
-import { NET } from '../lib/networkCopy'
+import { NET, useRegistrationLabel } from '../lib/networkCopy'
 import { ANCESTORS, exposureCounts, FINDINGS, type FindingStatus, LOCI, MODEL } from '../protocol/ancestors'
 import { compileBlueprint, recommendedStatus } from '../protocol/blueprintCompiler'
 import { BLUEPRINT_BY_SLUG, FEATURED_BLUEPRINTS, INTENTS } from '../protocol/blueprints'
 import { ancestorGenome } from '../protocol/descendant'
 import { MODULE_STATUSES, PQ_MODULES } from '../protocol/modules'
+import { CHAIN_BURN_SCALE } from '../protocol/pricing'
 import { PQ_PROFILES, PROFILE_BY_ID } from '../protocol/profiles'
 import { Link } from '../router'
 import { type LayerSpec, NO_FX } from '../three/types'
@@ -409,6 +411,7 @@ function ScanSection() {
 
 function EvolutionSection() {
   const [open, setOpen] = useState(false)
+  const scale = CHAIN_BURN_SCALE[useRuntime().burnChain]
   return (
     <section className="section" aria-labelledby="evo-title">
       <header className="section-head">
@@ -449,7 +452,7 @@ function EvolutionSection() {
         {open && (
           <div className="pq-grid" id="gene-grid">
             {PQ_MODULES.map((module) => (
-              <ModuleCard key={module.id} module={module} />
+              <ModuleCard key={module.id} module={module} scale={scale} />
             ))}
           </div>
         )}
@@ -479,11 +482,14 @@ const FLOW = [
 function BurnSection() {
   const ref = useRef<HTMLOListElement>(null)
   const seen = useSeen(ref, '-20% 0px')
-  const live = CLIENT_CONFIG.tokenStatus === 'LIVE'
+  const server = useServerStatus()
+  const base = server.state === 'ok' ? server.status.base : undefined
+  const baseLive = base?.network === 'base' && base.tokenStatus === 'LIVE' && Boolean(base.token)
+  const solanaLive = CLIENT_CONFIG.tokenStatus === 'LIVE'
   return (
     <section className="section" aria-labelledby="flow-title">
       <header className="section-head">
-        <p className="eyebrow">$QFORK · {live ? 'Live' : 'Token launch pending'}</p>
+        <p className="eyebrow">$QFORK · {baseLive ? 'Live on Base' : solanaLive ? 'Live' : 'Token launch pending'}</p>
         <h2 id="flow-title">
           Burn QFORK. <span>Create the descendant.</span>
         </h2>
@@ -505,11 +511,13 @@ function BurnSection() {
       </ol>
       <div className="burn-foot">
         <p className="muted">
-          {live
-            ? 'Market data comes from the Pump.fun bonding curve.'
-            : NET.mainnet
-              ? 'The token has not launched, so there is no price to show.'
-              : 'The token has not launched, so there is no price to show. Until then, registration burns a devnet test token with no value.'}
+          {baseLive
+            ? 'Launched through Clanker. Supply is read from the token contract on Base.'
+            : solanaLive
+              ? 'Market data comes from the Pump.fun bonding curve.'
+              : NET.mainnet
+                ? 'The token has not launched, so there is no price to show.'
+                : 'The token has not launched, so there is no price to show. Until then, registration burns a devnet test token with no value.'}
         </p>
         <Link to="/qfork" className="btn btn-secondary btn-sm">
           How $QFORK works <ArrowRight size={14} strokeWidth={1.8} />
@@ -585,6 +593,7 @@ function BeginningSection() {
   const near = useSeen(section, '400px')
   const [active, setActive] = useState(0)
   const visual = useMemo(() => blueprintVisual(BLUEPRINT_BY_SLUG['quantum-chain']), [])
+  const registration = useRegistrationLabel()
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -634,7 +643,7 @@ function BeginningSection() {
               <code>{String(index + 1).padStart(2, '0')}</code>
               <h3>{stage.title}</h3>
               <p>{stage.body}</p>
-              <Pill label={stage.status} tone={stage.tone} />
+              <Pill label={index === 0 && NET.mainnet ? registration : stage.status} tone={stage.tone} />
             </li>
           ))}
         </ol>

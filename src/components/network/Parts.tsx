@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { explorerAddress, explorerTx } from '../../config'
+import { explorerAddress, explorerTx, isMainnetNetwork } from '../../config'
 import { timestamp, type ConsoleView } from '../../lib/networkUi'
 import { Link } from '../../router'
 
@@ -43,9 +43,9 @@ export function RecordFeed({ view, limit }: { view: ConsoleView; limit?: number 
       key: 'burn',
       at: receipt.timestamp,
       type: 'BURN',
-      title: `${receipt.amount.toLocaleString('en-US')} ${view.cluster === 'mainnet-beta' ? 'QFORK' : 'test QFORK'} burned`,
+      title: `${receipt.amount.toLocaleString('en-US')} ${isMainnetNetwork(view.network) ? 'QFORK' : 'test QFORK'} burned`,
       proof: (
-        <a href={explorerTx(receipt.signature, view.cluster)} target="_blank" rel="noreferrer">
+        <a href={explorerTx(receipt.signature, view.network)} target="_blank" rel="noreferrer">
           transaction
         </a>
       ),

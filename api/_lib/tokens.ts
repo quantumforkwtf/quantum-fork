@@ -1,5 +1,6 @@
 import { encodeFunctionData, getAddress, type Hex } from 'viem'
 import { base58Decode, createWithSeed, metadataAddress } from '../../src/protocol/address.js'
+import type { AncestorId } from '../../src/protocol/ancestors.js'
 import type { Chain } from '../../src/protocol/base.js'
 import { CLANKER_DECIMALS, CLANKER_FACTORY, CLANKER_SUPPLY_RAW, clankerContext, verifyClankerCreation } from '../../src/protocol/clanker.js'
 import { PUMP_PROGRAM_ID } from '../../src/protocol/pumpfun.js'
@@ -53,17 +54,19 @@ async function ownedDescendant(context: Context, deploymentId: string, wallet: s
   return record
 }
 
-function metadataFor(context: Context, mint: string, descendantId: string, deploymentId: string, spec: { name: string; symbol: string; description: string }): TokenMetadataJson {
+const ancestorName = (ancestor: AncestorId) => (ancestor === 'base' ? 'Base' : 'Solana')
+
+function metadataFor(context: Context, mint: string, descendantId: string, deploymentId: string, ancestor: AncestorId, spec: { name: string; symbol: string; description: string }): TokenMetadataJson {
   const site = context.env.config.siteUrl
   return {
     name: spec.name,
     symbol: spec.symbol,
-    description: spec.description || `${spec.name} ($${spec.symbol}), launched for ${descendantId}, a Quantum Fork descendant of Solana.`,
+    description: spec.description || `${spec.name} ($${spec.symbol}), launched for ${descendantId}, a Quantum Fork descendant of ${ancestorName(ancestor)}.`,
     image: `${site}/api/og?token=${mint}`,
     external_url: `${site}/species/${deploymentId}`,
     attributes: [
       { trait_type: 'Descendant', value: descendantId },
-      { trait_type: 'Ancestor', value: 'Solana' },
+      { trait_type: 'Ancestor', value: ancestorName(ancestor) },
     ],
   }
 }
@@ -79,7 +82,7 @@ export async function prepareSpl(context: Context, input: { deploymentId: string
   const cluster = context.env.config.network
   const seed = tokenSeed(() => randomToken(10))
   const mint = createWithSeed(input.wallet, seed, TOKEN_PROGRAM)
-  const metadata = metadataFor(context, mint, record.descendantId, record.id, input.spec)
+  const metadata = metadataFor(context, mint, record.descendantId, record.id, record.config.ancestor, input.spec)
   const prepared: PreparedLaunch = {
     mint,
     kind: 'spl',
@@ -101,7 +104,7 @@ export async function prepareSpl(context: Context, input: { deploymentId: string
 export async function preparePump(context: Context, input: { deploymentId: string; wallet: string; mint: string; spec: PumpSpec }) {
   if (!context.env.config.flags.pumpfunLaunch) throw new HttpError(403, 'PUMPFUN_DISABLED', 'Pump.fun launches are switched off on this server (ENABLE_PUMPFUN_LAUNCH).')
   const record = await ownedDescendant(context, input.deploymentId, input.wallet)
-  const metadata = metadataFor(context, input.mint, record.descendantId, record.id, input.spec)
+  const metadata = metadataFor(context, input.mint, record.descendantId, record.id, record.config.ancestor, input.spec)
   const uri = `${context.env.config.siteUrl}/api/tokens?meta=${input.mint}`
   const prepared: PreparedLaunch = {
     mint: input.mint,
@@ -324,7 +327,7 @@ export async function prepareClanker(context: Context, input: { deploymentId: st
     external_url: `${site}/species/${record.id}`,
     attributes: [
       { trait_type: 'Descendant', value: record.descendantId },
-      { trait_type: 'Ancestor', value: 'Solana' },
+      { trait_type: 'Ancestor', value: ancestorName(record.config.ancestor) },
     ],
   }
   await context.store.set(keys.launch(launchId), JSON.stringify(prepared), { nx: true, ttlSeconds: CLANKER_TTL })

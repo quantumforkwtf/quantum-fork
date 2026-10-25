@@ -40,8 +40,8 @@ function Bullets({ items }: { items: string[] }) {
 
 export default function BlueprintDetail({ slug }: { slug: string }) {
   const blueprint = findBlueprint(slug)
-  const { devnetBurn } = useRuntime()
-  const compiled = useMemo(() => (blueprint ? compileBlueprint(blueprint, {}, { devnetBurn }) : null), [blueprint, devnetBurn])
+  const { devnetBurn, mainnetBurn, burnChain } = useRuntime()
+  const compiled = useMemo(() => (blueprint ? compileBlueprint(blueprint, {}, { devnetBurn, mainnetBurn, burnChain }) : null), [blueprint, devnetBurn, mainnetBurn, burnChain])
   usePageMeta({
     title: blueprint ? `${blueprint.name} blueprint` : 'Blueprint not found',
     description: blueprint ? `${blueprint.headline} ${blueprint.description}` : undefined,

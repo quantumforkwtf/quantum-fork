@@ -1,14 +1,13 @@
 import { Copy, ExternalLink } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Pill } from '../components/Status'
-import { explorerAddress, explorerTx } from '../config'
+import { explorerAddress, explorerTx, isMainnetNetwork } from '../config'
 import { useRegistry } from '../lab/registry'
 import { api, ApiError } from '../lib/api'
 import { usePageMeta } from '../lib/meta'
 import { copyText } from '../lib/toast'
 import { isSignature, shortAddress } from '../protocol/address'
 import { formatBaseUnits } from '../protocol/pricing'
-import type { SolanaNetwork } from '../protocol/config'
 import type { BurnReceipt } from '../protocol/receipt'
 import { Link } from '../router'
 
@@ -71,7 +70,8 @@ export default function Receipt({ id }: { id: string }) {
     )
   }
 
-  const network = receipt.network as SolanaNetwork
+  const network = receipt.network
+  const onBase = receipt.chain === 'base'
   const descendant = registry.find((item) => item.receipt?.id === receipt.id || item.deployment?.id === receipt.deploymentId)
 
   return (
@@ -83,20 +83,20 @@ export default function Receipt({ id }: { id: string }) {
             {verified ? 'BURN VERIFIED' : `BURN ${receipt.verificationStatus}`}
           </div>
           <p className="receipt-amount">
-            {formatBaseUnits(receipt.amountRaw, receipt.decimals)} <span>{network === 'mainnet-beta' ? 'QFORK' : 'TEST QFORK'}</span>
+            {formatBaseUnits(receipt.amountRaw, receipt.decimals)} <span>{isMainnetNetwork(network) ? 'QFORK' : 'TEST QFORK'}</span>
           </p>
           <p className="muted">
-            Destroyed with the SPL burn instruction on {receipt.network}. Read from the finalized transaction by the server, not reported by a browser. It registered {receipt.descendantId}.
+            Destroyed with {onBase ? 'the token’s burn() function' : 'the SPL burn instruction'} on {receipt.network}. Read from the finalized transaction by the server, not reported by a browser. It registered {receipt.descendantId}.
           </p>
         </header>
 
         <dl className="report receipt-fields">
           <Row label="Descendant">{descendant ? <Link to={`/species/${descendant.id}`}>{receipt.descendantId}</Link> : receipt.descendantId}</Row>
-          <Row label="Ancestor">SOLANA</Row>
+          <Row label="Ancestor">{receipt.ancestor === 'base' ? 'BASE' : 'SOLANA'}</Row>
           <Row label="Network">
-            {receipt.network} {receipt.network === 'devnet' && <Pill label="TEST TOKEN · NO VALUE" tone="var(--cyan)" />}
+            {receipt.network} {!isMainnetNetwork(network) && <Pill label="TEST TOKEN · NO VALUE" tone="var(--cyan)" />}
           </Row>
-          <Row label="Signature">
+          <Row label={onBase ? 'Transaction' : 'Signature'}>
             <a href={explorerTx(receipt.signature, network)} target="_blank" rel="noreferrer noopener">
               {shortAddress(receipt.signature, 10, 10)} <ExternalLink size={11} strokeWidth={1.8} />
             </a>
@@ -106,7 +106,7 @@ export default function Receipt({ id }: { id: string }) {
               {shortAddress(receipt.wallet, 6, 6)}
             </a>
           </Row>
-          <Row label="Mint">
+          <Row label={onBase ? 'Token' : 'Mint'}>
             <a href={explorerAddress(receipt.mint, network)} target="_blank" rel="noreferrer noopener">
               {shortAddress(receipt.mint, 6, 6)}
             </a>
@@ -114,10 +114,10 @@ export default function Receipt({ id }: { id: string }) {
           <Row label="Base units">
             {receipt.amountRaw} ({receipt.decimals} decimals)
           </Row>
-          <Row label="Slot">{receipt.slot?.toLocaleString('en-US') ?? '—'}</Row>
+          <Row label={onBase ? 'Block' : 'Slot'}>{receipt.slot?.toLocaleString('en-US') ?? '—'}</Row>
           <Row label="Block time">{receipt.timestamp.replace('T', ' ').slice(0, 19)} UTC</Row>
           <Row label="Verified">{receipt.verifiedAt ? `${receipt.verifiedAt.replace('T', ' ').slice(0, 19)} UTC · finalized` : '—'}</Row>
-          <Row label="Token program">{receipt.tokenProgram ? shortAddress(receipt.tokenProgram) : '—'}</Row>
+          {!onBase && <Row label="Token program">{receipt.tokenProgram ? shortAddress(receipt.tokenProgram) : '—'}</Row>}
           <Row label="Deployment">
             <code>{receipt.deploymentId}</code>
           </Row>

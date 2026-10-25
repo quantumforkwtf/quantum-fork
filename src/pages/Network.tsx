@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { LaunchToken } from '../components/network/LaunchToken'
 import FailurePanel from '../components/FailurePanel'
 import { OriginBadge } from '../components/Status'
-import { explorerTx } from '../config'
+import { explorerTx, isMainnetNetwork } from '../config'
 import { formatNumber } from '../lib/hooks'
 import { usePageMeta } from '../lib/meta'
 import { navigate, useLocation } from '../navigation'
@@ -26,8 +26,8 @@ function Metrics({ view }: { view: ConsoleView }) {
       label: 'QFORK burned',
       value: receipt ? formatNumber(receipt.amount) : '—',
       note: receipt ? (
-        <a href={explorerTx(receipt.signature, view.cluster)} target="_blank" rel="noreferrer">
-          {view.cluster === 'mainnet-beta' ? 'verified on-chain' : 'test QFORK · verified'}
+        <a href={explorerTx(receipt.signature, view.network)} target="_blank" rel="noreferrer">
+          {isMainnetNetwork(view.network) ? 'verified on-chain' : 'test QFORK · verified'}
         </a>
       ) : (
         'not verified'

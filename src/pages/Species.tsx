@@ -2,7 +2,7 @@ import { GitCompare, Maximize2, Minus, Plus, X } from 'lucide-react'
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { OriginBadge, Pill } from '../components/Status'
 import { OrganismThumb } from '../components/Viewports'
-import { ancestorOf, type Descendant, findDescendant, genomeOf, lineage, mergeServerDescendants, type Origin, useRegistry } from '../lab/registry'
+import { ancestorOf, burnChainOf, type Descendant, findDescendant, genomeOf, lineage, mergeServerDescendants, type Origin, useRegistry } from '../lab/registry'
 import { api } from '../lib/api'
 import { ageOf, formatNumber, useMediaQuery } from '../lib/hooks'
 import { usePageMeta } from '../lib/meta'
@@ -10,6 +10,7 @@ import { navigate } from '../navigation'
 import { ANCESTOR_NAME, DEFAULT_ANCESTOR, LOCUS_BY_CODE } from '../protocol/ancestors'
 import { ancestorRows, type DescendantConfig, genomeDiff } from '../protocol/descendant'
 import { stateLabel } from '../protocol/deployment'
+import { useRuntime } from '../lab/runtime'
 import { quoteGenesis } from '../protocol/pricing'
 import { PROFILE_BY_ID } from '../protocol/profiles'
 import { Link } from '../router'
@@ -219,7 +220,8 @@ function Outline({ all, onSelect }: { all: Descendant[]; onSelect: (id: string) 
 }
 
 function Inspector({ item, all, onClose, onCompare, comparing }: { item: Descendant; all: Descendant[]; onClose: () => void; onCompare: () => void; comparing: boolean }) {
-  const quote = item.config ? quoteGenesis(item.config) : null
+  const { burnChain } = useRuntime()
+  const quote = item.config ? quoteGenesis(item.config, 'GENESIS', burnChainOf(item, burnChain)) : null
   const chain = lineage(all, item.id)
   return (
     <aside className="inspector panel" aria-label={`${nameOf(item)} summary`}>

@@ -6,13 +6,14 @@ import { CLIENT_CONFIG, explorerAddress, GITHUB_URL, X_HANDLE, X_URL } from '../
 import { api, ApiError } from '../lib/api'
 import { formatNumber } from '../lib/hooks'
 import { usePageMeta } from '../lib/meta'
-import { NET } from '../lib/networkCopy'
+import { useRuntime } from '../lab/runtime'
+import { NET, useRegistrationLabel } from '../lib/networkCopy'
 import { copyText } from '../lib/toast'
 import { shortAddress } from '../protocol/address'
 import { BURN_OPERATIONS, type BurnOperationSpec } from '../protocol/burnEngine'
 import { PQ_MODULES } from '../protocol/modules'
 import { baseExplorerAddress, type BaseNetwork } from '../protocol/base'
-import { formatBaseUnits, PRICING } from '../protocol/pricing'
+import { CHAIN_BURN_SCALE, formatBaseUnits, PRICING } from '../protocol/pricing'
 import { Link } from '../router'
 import { FinalWord } from './Home'
 
@@ -49,7 +50,7 @@ POST-QUANTUM BLOCKCHAIN LAB
 Build for the quantum future. No code required.
 Choose what to build: a chain, a vault, a payment network, a private network or an AI economy. Burn $QFORK to launch it.
 
-$QFORK is burned, never sent to a wallet: the SPL burn instruction on Solana, the token's own burn() on Base. Supply goes down.
+$QFORK is burned, never sent to a wallet: the token's own burn() on Base, the SPL burn instruction on Solana. Supply goes down.
 Nothing here is a promise of returns.
 
 ${CLIENT_CONFIG.siteUrl}
@@ -59,15 +60,20 @@ const REACTION_COLOR: Record<BurnOperationSpec['id'], string> = { GENESIS: 'var(
 
 const REACTIONS = BURN_OPERATIONS.map((operation) => ({
   ...operation,
-  ...(operation.id === 'GENESIS' && NET.mainnet ? { status: NET.registration, detail: 'Registers a new descendant by burning $QFORK.' } : {}),
-  input:
-    operation.base !== null
-      ? `${formatNumber(operation.base)} QFORK + modules`
-      : operation.id === 'MUTATION'
-        ? `${formatNumber(Math.min(...PQ_MODULES.map((m) => m.burn)))}+ QFORK`
-        : 'Not priced',
+  ...(operation.id === 'GENESIS' && NET.mainnet ? { detail: 'Registers a new descendant by burning $QFORK.' } : {}),
   color: REACTION_COLOR[operation.id],
 }))
+
+/** Burn amounts scale with the chain's supply: Base burns are CHAIN_BURN_SCALE.base× the Solana amounts. */
+function reactionInput(operation: BurnOperationSpec, scale: number) {
+  if (operation.base !== null) return `${formatNumber(operation.base * scale)} QFORK + modules`
+  if (operation.id === 'MUTATION') return `${formatNumber(Math.min(...PQ_MODULES.map((m) => m.burn)) * scale)}+ QFORK`
+  return 'Not priced'
+}
+
+function ReactionPill({ status }: { status: string }) {
+  return <Pill label={status} tone={status === 'TESTNET' ? 'var(--cyan)' : status === 'MAINNET' ? 'var(--green)' : 'var(--faint)'} />
+}
 
 function useToken() {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
@@ -93,34 +99,50 @@ export default function QFork() {
   const base = data?.base ?? null
   const baseLive = base?.status === 'LIVE' && Boolean(base.token)
   const baseName = base?.network === 'base-sepolia' ? 'Base Sepolia' : 'Base'
+  const registration = useRegistrationLabel()
+  const { burnChain } = useRuntime()
+  const clankerUrl = baseLive ? (base?.clankerUrl ?? null) : null
+  const baseLine = baseLive && base?.token && (
+    <p className="mint-line">
+      {baseName.toUpperCase()}{' '}
+      <a href={baseExplorerAddress(base.token, base.network)} target="_blank" rel="noreferrer noopener">
+        <code>{base.token}</code>
+      </a>
+      <button type="button" className="icon-btn" aria-label="Copy Base contract address" onClick={() => void copyText(base.token ?? '', 'Base contract address copied.')}>
+        <Copy size={13} strokeWidth={1.8} />
+      </button>
+    </p>
+  )
 
   return (
     <div className="token-page">
       <section className="token-hero">
         <div className="token-copy">
           <p className="eyebrow">
-            Material data sheet · QF-MSDS-02 · <Pill label={prelaunch ? 'TOKEN LAUNCH PENDING' : `LIVE · ${data?.network ?? CLIENT_CONFIG.network}`} tone={prelaunch ? 'var(--orange)' : 'var(--green)'} />
+            Material data sheet · QF-MSDS-02 · <Pill label={baseLive ? `LIVE · ${baseName.toUpperCase()}` : prelaunch ? 'TOKEN LAUNCH PENDING' : `LIVE · ${data?.network ?? CLIENT_CONFIG.network}`} tone={baseLive || !prelaunch ? 'var(--green)' : 'var(--orange)'} />
           </p>
           <h1>$QFORK</h1>
           <p className="token-sub">The fuel that launches a descendant.</p>
           <p className="section-lede">
-            $QFORK is burned to commission a post-quantum descendant. On Solana a burn is the SPL burn instruction; on Base it is the token’s own burn() function. Either way
+            $QFORK is burned to commission a post-quantum descendant. On Base a burn is the token’s own burn() function; on Solana it is the SPL burn instruction. Either way
             tokens are destroyed and total supply falls. It is never a transfer to a “dead” wallet.
           </p>
           <div className="hero-ctas">
+            {clankerUrl && (
+              <a href={clankerUrl} target="_blank" rel="noreferrer noopener" className="btn btn-primary btn-lg">
+                Trade on Clanker <ExternalLink size={15} strokeWidth={1.8} />
+              </a>
+            )}
             {tradingLink ? (
-              <a href={tradingLink} target="_blank" rel="noreferrer noopener" className="btn btn-primary btn-lg">
+              <a href={tradingLink} target="_blank" rel="noreferrer noopener" className={`btn ${clankerUrl ? 'btn-secondary' : 'btn-primary'} btn-lg`}>
                 Trade on Pump.fun <ExternalLink size={15} strokeWidth={1.8} />
               </a>
             ) : (
-              <button type="button" className="btn btn-primary btn-lg" disabled>
-                Token launch pending
-              </button>
-            )}
-            {baseLive && base?.clankerUrl && (
-              <a href={base.clankerUrl} target="_blank" rel="noreferrer noopener" className="btn btn-secondary btn-lg">
-                Trade on Clanker <ExternalLink size={15} strokeWidth={1.8} />
-              </a>
+              !clankerUrl && (
+                <button type="button" className="btn btn-primary btn-lg" disabled>
+                  Token launch pending
+                </button>
+              )
             )}
             <a href={X_URL} target="_blank" rel="noreferrer noopener" className="btn btn-secondary btn-lg">
               <XLogo size={14} /> Follow @{X_HANDLE}
@@ -132,24 +154,14 @@ export default function QFork() {
               <Copy size={15} strokeWidth={1.8} /> Copy brief
             </button>
           </div>
+          {baseLine}
           {mint && (
             <p className="mint-line">
-              MINT{' '}
+              {baseLine ? 'SOLANA' : 'MINT'}{' '}
               <a href={explorerAddress(mint)} target="_blank" rel="noreferrer noopener">
                 <code>{mint}</code>
               </a>
               <button type="button" className="icon-btn" aria-label="Copy mint address" onClick={() => void copyText(mint, 'Mint address copied.')}>
-                <Copy size={13} strokeWidth={1.8} />
-              </button>
-            </p>
-          )}
-          {baseLive && base?.token && (
-            <p className="mint-line">
-              {baseName.toUpperCase()}{' '}
-              <a href={baseExplorerAddress(base.token, base.network)} target="_blank" rel="noreferrer noopener">
-                <code>{base.token}</code>
-              </a>
-              <button type="button" className="icon-btn" aria-label="Copy Base contract address" onClick={() => void copyText(base.token ?? '', 'Base contract address copied.')}>
                 <Copy size={13} strokeWidth={1.8} />
               </button>
             </p>
@@ -160,8 +172,8 @@ export default function QFork() {
       <section className="section" aria-labelledby="live-title">
         <header className="section-head section-head-row">
           <div>
-            <p className="eyebrow">Token data · {live ? 'from the chain' : 'none yet'}</p>
-            <h2 id="live-title">{live ? 'Read from Solana, not from us.' : 'No price. No chart. Not yet.'}</h2>
+            <p className="eyebrow">Token data · {live || baseLive ? 'from the chain' : 'none yet'}</p>
+            <h2 id="live-title">{baseLive ? 'Read from the chain, not from us.' : live ? 'Read from Solana, not from us.' : 'No price. No chart. Not yet.'}</h2>
           </div>
           <button type="button" className="btn btn-quiet btn-sm" onClick={refresh} disabled={load.state === 'loading'}>
             <RefreshCw size={13} strokeWidth={1.8} /> Refresh
@@ -299,17 +311,17 @@ export default function QFork() {
 
       <section className="section" aria-labelledby="reactions-title">
         <header className="section-head">
-          <p className="eyebrow">Known reactions · pricing {PRICING.status.toLowerCase()}</p>
+          <p className="eyebrow">Known reactions · {burnChain === 'base' ? 'Base amounts · ' : ''}pricing {PRICING.status.toLowerCase()}</p>
           <h2 id="reactions-title">What burns QFORK.</h2>
         </header>
         <ol className="reactions">
           {REACTIONS.map((reaction) => (
             <li key={reaction.code} className="panel" style={{ '--c': reaction.color } as CSSProperties}>
               <span className="reaction-code">{reaction.code}</span>
-              <Pill label={reaction.status} tone={reaction.status === 'TESTNET' ? 'var(--cyan)' : reaction.status === 'MAINNET' ? 'var(--green)' : 'var(--faint)'} />
+              <ReactionPill status={reaction.id === 'GENESIS' && NET.mainnet ? registration : reaction.status} />
               <h3>{reaction.name}</h3>
               <p className="equation">
-                <span>{reaction.input}</span>
+                <span>{reactionInput(reaction, CHAIN_BURN_SCALE[burnChain])}</span>
                 <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
                 <span className="equation-out">{reaction.output}</span>
               </p>
@@ -342,23 +354,23 @@ export default function QFork() {
           </div>
           <div>
             <dt>Chains</dt>
-            <dd>Solana · Base</dd>
+            <dd>Base · Solana</dd>
           </div>
           <div>
             <dt>Launch</dt>
-            <dd>Pump.fun · Clanker{baseLive ? '' : ' (pending)'}</dd>
-          </div>
-          <div>
-            <dt>Solana mint</dt>
-            <dd>{mint ? shortAddress(mint, 6, 6) : 'Published at launch'}</dd>
+            <dd>Clanker{baseLive ? '' : ' (pending)'} · Pump.fun</dd>
           </div>
           <div>
             <dt>Base contract</dt>
             <dd>{baseLive && base?.token ? shortAddress(base.token, 6, 6) : 'Published at launch'}</dd>
           </div>
           <div>
+            <dt>Solana mint</dt>
+            <dd>{mint ? shortAddress(mint, 6, 6) : 'Published at launch'}</dd>
+          </div>
+          <div>
             <dt>Burn mechanism</dt>
-            <dd>SPL BurnChecked + memo · ERC-20 burn() + tag</dd>
+            <dd>ERC-20 burn() + tag · SPL BurnChecked + memo</dd>
           </div>
         </dl>
       </section>

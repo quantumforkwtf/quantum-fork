@@ -15,6 +15,7 @@ import {
   type QuestionOption,
   STATUS_RANK,
 } from './blueprints.js'
+import type { Chain } from './base.js'
 import { type BurnEstimate, estimateBurn } from './burnEngine.js'
 import { type DeploymentTier, type DescendantConfig, descendantSchema, normalizeConfig } from './descendant.js'
 import { ANCESTOR_NAME, type AncestorId, DEFAULT_ANCESTOR } from './ancestors.js'
@@ -34,6 +35,8 @@ export type Answers = Record<string, string>
 export interface RuntimeCapabilities {
   devnetBurn: boolean
   mainnetBurn?: boolean
+  /** The chain burns are priced on. Defaults to Solana amounts. */
+  burnChain?: Chain
 }
 
 export const NO_RUNTIME: RuntimeCapabilities = { devnetBurn: false, mainnetBurn: false }
@@ -437,7 +440,7 @@ export function compileBlueprint(blueprint: Blueprint, input: Answers = {}, runt
   if (config?.modules.includes('vid')) rows.push({ label: 'Validators', verdict: 'BREAKING', detail: 'Consensus-breaking: every validator upgrades together.' })
   const compatibility: CompatibilityReport = { rows, breaking: rows.filter((row) => row.verdict === 'BREAKING').length }
 
-  const burn = estimateBurn(blueprint.qforkBurnModel, config)
+  const burn = estimateBurn(blueprint.qforkBurnModel, config, runtime.burnChain)
 
   return { blueprint, answers: resolved.answers, questions: resolved.questions, genome, config, architecture, components, status, statusLimitedBy, plan: { steps, tiers, action }, warnings, compatibility, burn, valid, issues }
 }

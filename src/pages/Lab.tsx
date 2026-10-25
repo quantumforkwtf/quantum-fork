@@ -1023,6 +1023,7 @@ function LabBench() {
                       <ModuleCard
                         key={module.id}
                         module={module}
+                        scale={CHAIN_BURN_SCALE[chain]}
                         selected={selected}
                         locked={locked}
                         onToggle={() =>

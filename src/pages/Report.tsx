@@ -1,13 +1,13 @@
-import type { SolanaNetwork } from '../protocol/config'
 import { ExternalLink, Microscope, X } from 'lucide-react'
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import GenomeTerminal from '../components/GenomeTerminal'
 import ModuleCard from '../components/ModuleCard'
 import { OriginBadge, Pill } from '../components/Status'
 import { OrganismThumb, SpecimenViewport } from '../components/Viewports'
-import { CLIENT_CONFIG, explorerTx } from '../config'
+import { CLIENT_CONFIG, explorerTx, isMainnetNetwork } from '../config'
 import type { OrganPart } from '../lab/morphology'
-import { ancestorOf, childrenOf, type Descendant, findDescendant, genomeOf, lineage, ORIGIN_LABEL, updateRemote, useRegistry } from '../lab/registry'
+import { ancestorOf, burnChainOf, childrenOf, type Descendant, findDescendant, genomeOf, lineage, ORIGIN_LABEL, updateRemote, useRegistry } from '../lab/registry'
+import { useRuntime } from '../lab/runtime'
 import { fetchRemoteDeployment } from '../lab/testnet'
 import { FlowError } from '../lib/failures'
 import { ageOf, formatNumber } from '../lib/hooks'
@@ -17,7 +17,7 @@ import { ANCESTOR_NAME, type AncestorId, DEFAULT_ANCESTOR, exposedParts, LOCUS_B
 import { type DeploymentRecord, stateLabel } from '../protocol/deployment'
 import { ancestorRows, genomeDiff, genomeHash, remainingExposure } from '../protocol/descendant'
 import { moduleFor } from '../protocol/modules'
-import { PRICING, quoteGenesis } from '../protocol/pricing'
+import { CHAIN_BURN_SCALE, PRICING, quoteGenesis } from '../protocol/pricing'
 import { PROFILE_BY_ID, strainLabel } from '../protocol/profiles'
 import type { BurnReceipt } from '../protocol/receipt'
 import { Link } from '../router'
@@ -93,7 +93,7 @@ function MicroscopeView({ item, onClose }: { item: Descendant; onClose: () => vo
 }
 
 function ReceiptBlock({ receipt }: { receipt: BurnReceipt }) {
-  const network = receipt.network as SolanaNetwork
+  const network = receipt.network
   return (
     <dl className="report">
       <div>
@@ -105,7 +105,7 @@ function ReceiptBlock({ receipt }: { receipt: BurnReceipt }) {
       <div>
         <dt>Amount</dt>
         <dd>
-          {formatNumber(receipt.amount)} {network === 'mainnet-beta' ? 'QFORK' : 'test QFORK'} ({receipt.amountRaw} base units)
+          {formatNumber(receipt.amount)} {isMainnetNetwork(network) ? 'QFORK' : 'test QFORK'} ({receipt.amountRaw} base units)
         </dd>
       </div>
       <div>
@@ -113,7 +113,7 @@ function ReceiptBlock({ receipt }: { receipt: BurnReceipt }) {
         <dd>{receipt.network}</dd>
       </div>
       <div>
-        <dt>Signature</dt>
+        <dt>{receipt.chain === 'base' ? 'Transaction' : 'Signature'}</dt>
         <dd>
           <a href={explorerTx(receipt.signature, network)} target="_blank" rel="noreferrer noopener">
             {shortAddress(receipt.signature, 8, 8)} <ExternalLink size={11} strokeWidth={1.8} />
@@ -125,7 +125,7 @@ function ReceiptBlock({ receipt }: { receipt: BurnReceipt }) {
         <dd>{shortAddress(receipt.wallet, 6, 6)}</dd>
       </div>
       <div>
-        <dt>Slot</dt>
+        <dt>{receipt.chain === 'base' ? 'Block' : 'Slot'}</dt>
         <dd>{receipt.slot?.toLocaleString('en-US') ?? '—'}</dd>
       </div>
       <div>
@@ -199,6 +199,7 @@ export default function Report({ id }: { id: string }) {
   const [microscope, setMicroscope] = useState(false)
   const [hash, setHash] = useState('')
   const [part, setPart] = useState<OrganPart | null>(null)
+  const runtime = useRuntime()
   const item = local ?? fetched
   const ancestor = item ? ancestorOf(item) : DEFAULT_ANCESTOR
   const facts = ROOT_FACTS[ancestor]
@@ -266,7 +267,8 @@ export default function Report({ id }: { id: string }) {
   const profile = config ? PROFILE_BY_ID[config.profile] : null
   const chain = lineage(registry, item.id)
   const kids = childrenOf(registry, item.id)
-  const quote = config ? quoteGenesis(config) : null
+  const burnChain = burnChainOf(item, runtime.burnChain)
+  const quote = config ? quoteGenesis(config, 'GENESIS', burnChain) : null
   const remaining = config ? remainingExposure(config) : rows.filter((row) => row.code !== 'HSH')
   const genome = genomeOf(item)
   const name = config?.network.name ?? ANCESTOR_NAME[ancestor]
@@ -384,7 +386,7 @@ export default function Report({ id }: { id: string }) {
               {profile.warning && <p className="callout is-danger">{profile.warning}</p>}
               <div className="pq-grid pq-grid-tight">
                 {config.modules.map((moduleId) => (
-                  <ModuleCard key={moduleId} module={moduleFor(moduleId, config.ancestor)} />
+                  <ModuleCard key={moduleId} module={moduleFor(moduleId, config.ancestor)} scale={CHAIN_BURN_SCALE[burnChain]} />
                 ))}
               </div>
             </>

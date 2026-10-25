@@ -11,9 +11,11 @@ interface ModuleCardProps {
   locked?: boolean
   onToggle?: () => void
   expanded?: boolean
+  /** Burn multiplier for the chain being priced (CHAIN_BURN_SCALE). */
+  scale?: number
 }
 
-export default function ModuleCard({ module, selected = false, locked = false, onToggle, expanded = false }: ModuleCardProps) {
+export default function ModuleCard({ module, selected = false, locked = false, onToggle, expanded = false, scale = 1 }: ModuleCardProps) {
   const body = (
     <>
       <header className="pq-head">
@@ -63,7 +65,7 @@ export default function ModuleCard({ module, selected = false, locked = false, o
       {module.warning && <p className="pq-warn">{module.warning}</p>}
       <footer className="pq-foot">
         <span className="pq-burn">
-          {formatNumber(module.burn)} <small>QFORK</small>
+          {formatNumber(module.burn * scale)} <small>QFORK</small>
         </span>
       </footer>
       {expanded && module.repositories.length + module.documentation.length > 0 && <SourceList ids={[...module.documentation, ...module.repositories]} compact />}

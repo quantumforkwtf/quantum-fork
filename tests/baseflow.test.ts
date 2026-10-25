@@ -245,6 +245,8 @@ describe('Clanker descendant launch on Base', () => {
     expect(prepared.data.toLowerCase()).toContain(WALLET.slice(2))
     expect(prepared.data).toContain(Buffer.from(record.id).toString('hex'))
     expect(prepared.image).toBe(`${serverEnv().config.siteUrl}/api/og?token=${prepared.launchId}`)
+    const metadata = JSON.parse((await store.get(keys.meta(prepared.launchId))) ?? '{}') as { attributes: unknown[] }
+    expect(metadata.attributes).toContainEqual({ trait_type: 'Ancestor', value: 'Base' })
   })
 
   it('waits for the transaction and finality, then records the token once', async () => {
