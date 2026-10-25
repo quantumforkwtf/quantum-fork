@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="330" viewBox="0 0 580 330" role="img" aria-label="FORK WARS: Race two realities.">
+<style>
+  .sans{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace}
+  .spin,.spinr,.pop,.fade,.grow,.draw,.blink,.rise{transform-box:fill-box;transform-origin:center}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinr{to{transform:rotate(-360deg)}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes ping{0%{transform:scale(1);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+  @keyframes dash{to{stroke-dashoffset:-32}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.ba,.bb{transform-box:fill-box;transform-origin:left center;transform:scaleX(0)}
+     .ba{animation:ba 6s cubic-bezier(.2,.7,.1,1) infinite}
+     .bb{animation:bb 6s linear infinite}
+     @keyframes ba{0%{transform:scaleX(0)}5%{transform:scaleX(1)}90%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+     @keyframes bb{0%{transform:scaleX(0)}70%{transform:scaleX(1)}90%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+     .da,.db{opacity:0}
+     .da{animation:dt 6s ease infinite}
+     .db{animation:dt 6s ease infinite}
+     @keyframes dt{0%{opacity:0}2%{opacity:1}90%{opacity:1}100%{opacity:0}}</style>
+<defs>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  <clipPath id="frame"><rect width="580" height="330" rx="20"/></clipPath>
+    <radialGradient id="cgl" cx="290" cy="90" r="300" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#c8ff4d" stop-opacity=".1"/><stop offset="1" stop-color="#c8ff4d" stop-opacity="0"/></radialGradient>
+</defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="580" height="330" fill="#0b0c0e"/>
+    <rect width="580" height="178" fill="url(#grid)"/>
+    <rect width="580" height="178" fill="url(#cgl)"/>
+    <line x1="0" y1="178.5" x2="580" y2="178.5" stroke="#fff" stroke-opacity=".07"/>
+    <g>
+    <text x="30" y="36" class="mono" font-size="11" letter-spacing="1" fill="#5a5b5c">ERC-20 TRANSFER × 4 · SAME BYTECODE · TWO ANVILS</text>
+    
+    <text x="30" y="77" class="mono" font-size="11.5" letter-spacing="1" fill="#eceae4">AUTOMINE</text>
+    <rect x="150" y="66" width="250" height="12" rx="6" fill="#fff" fill-opacity=".06"/>
+    <rect class="ba" x="150" y="66" width="250" height="12" rx="6" fill="#c8ff4d"/>
+    <circle class="da" cx="206" cy="92" r="3" fill="#c8ff4d" style="animation-delay:0.00s"/><circle class="da" cx="268" cy="92" r="3" fill="#c8ff4d" style="animation-delay:0.08s"/><circle class="da" cx="330" cy="92" r="3" fill="#c8ff4d" style="animation-delay:0.16s"/><circle class="da" cx="392" cy="92" r="3" fill="#c8ff4d" style="animation-delay:0.24s"/>
+    <text x="550" y="77" text-anchor="end" class="mono" font-size="11.5" fill="#c8ff4d">66.67 tx/s · 15 ms</text>
+    
+    <text x="30" y="133" class="mono" font-size="11.5" letter-spacing="1" fill="#eceae4">INTERVAL 1s</text>
+    <rect x="150" y="122" width="250" height="12" rx="6" fill="#fff" fill-opacity=".06"/>
+    <rect class="bb" x="150" y="122" width="250" height="12" rx="6" fill="#9d7bff"/>
+    <circle class="db" cx="206" cy="148" r="3" fill="#9d7bff" style="animation-delay:0.00s"/><circle class="db" cx="268" cy="148" r="3" fill="#9d7bff" style="animation-delay:1.00s"/><circle class="db" cx="330" cy="148" r="3" fill="#9d7bff" style="animation-delay:2.00s"/><circle class="db" cx="392" cy="148" r="3" fill="#9d7bff" style="animation-delay:3.00s"/>
+    <text x="550" y="133" text-anchor="end" class="mono" font-size="11.5" fill="#9d7bff">1.02 tx/s · 977 ms</text>
+    <text x="30" y="166" class="mono" font-size="10.5" fill="#a3a29d">gas identical: 305,746 both sides · peak RSS 16.0 MB vs 21.8 MB</text></g>
+    <text x="30" y="214" class="mono" font-size="12.5" font-weight="700" letter-spacing="2.5" fill="#c8ff4d">04 · FORK WARS</text>
+    <text x="30" y="252" class="sans" font-size="30" font-weight="750" letter-spacing="-.8" fill="#eceae4">Race two realities.</text>
+    <text x="30" y="284" class="sans" font-size="17" fill="#a3a29d">Same workload, two chain configurations.</text><text x="30" y="308" class="sans" font-size="17" fill="#a3a29d">Gas, latency, throughput, memory. Measured.</text>
+  </g>
+  <rect x=".5" y=".5" width="579" height="329" rx="20" fill="none" stroke="#fff" stroke-opacity=".09"/>
+  
+</svg>

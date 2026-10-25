@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://quantumfork.wtf/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://quantumfork.wtf/create</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/quantum-shield</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/reality-fork</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/time-machine</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/fork-wars</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/ghost-chains</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/lab/mutation</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/explore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/build</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantum-chain</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantum-vault</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantum-payments</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/private-quantum-network</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantum-ai-economy</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/enterprise-quantum-network</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantumize-my-app</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/quantumize-my-chain</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/blueprints/custom</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/quantumize</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/scanner</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/lab</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://quantumfork.wtf/species</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/species/solana</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://quantumfork.wtf/qfork</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://quantumfork.wtf/security</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>

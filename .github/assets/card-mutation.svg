@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="330" viewBox="0 0 580 330" role="img" aria-label="MUTATION ENGINE: Evolve the genome.">
+<style>
+  .sans{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace}
+  .spin,.spinr,.pop,.fade,.grow,.draw,.blink,.rise{transform-box:fill-box;transform-origin:center}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinr{to{transform:rotate(-360deg)}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes ping{0%{transform:scale(1);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+  @keyframes dash{to{stroke-dashoffset:-32}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.ed{stroke-dasharray:100;stroke-dashoffset:100;animation:ed 7s ease infinite}
+     @keyframes ed{0%{stroke-dashoffset:100;opacity:1}8%{stroke-dashoffset:0}85%{stroke-dashoffset:0;opacity:1}95%,100%{opacity:0;stroke-dashoffset:0}}
+     .nd{opacity:0;animation:nd 7s cubic-bezier(.2,.7,.1,1) infinite}
+     @keyframes nd{0%{opacity:0;transform:translateY(6px)}6%{opacity:1;transform:none}85%{opacity:1}95%,100%{opacity:0}}</style>
+<defs>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  <clipPath id="frame"><rect width="580" height="330" rx="20"/></clipPath>
+    <radialGradient id="cgl" cx="290" cy="90" r="300" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4fe3ff" stop-opacity=".1"/><stop offset="1" stop-color="#4fe3ff" stop-opacity="0"/></radialGradient>
+</defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="580" height="330" fill="#0b0c0e"/>
+    <rect width="580" height="178" fill="url(#grid)"/>
+    <rect width="580" height="178" fill="url(#cgl)"/>
+    <line x1="0" y1="178.5" x2="580" y2="178.5" stroke="#fff" stroke-opacity=".07"/>
+    <g><path class="ed" d="M60 92 L170 92" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" pathLength="100" style="animation-delay:0s"/><path class="ed" d="M170 92 C 230 92, 230 52, 290 52" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" pathLength="100" style="animation-delay:0.6s"/><path class="ed" d="M290 52 L420 52" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" pathLength="100" style="animation-delay:1.2s"/><path class="ed" d="M170 92 C 230 92, 230 132, 290 132" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" pathLength="100" style="animation-delay:1.8s"/><path class="ed" d="M290 132 L420 132" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" pathLength="100" style="animation-delay:2.4s"/><g class="nd" style="animation-delay:0s">
+        <circle cx="60" cy="92" r="9" fill="#060708" stroke="#eceae4" stroke-width="2"/>
+        <circle cx="60" cy="92" r="3.5" fill="#eceae4"/>
+        <text x="60" y="76" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v1 · seed</text>
+        <text x="60" y="116" text-anchor="middle" class="mono" font-size="9.5" letter-spacing="1" fill="#eceae4">BASE</text>
+      </g><g class="nd" style="animation-delay:0.5s">
+        <circle cx="170" cy="92" r="9" fill="#060708" stroke="#4fe3ff" stroke-width="2"/>
+        <circle cx="170" cy="92" r="3.5" fill="#4fe3ff"/>
+        <text x="170" y="76" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v2</text>
+        <text x="170" y="116" text-anchor="middle" class="mono" font-size="9.5" letter-spacing="1" fill="#4fe3ff">CONTRACT</text>
+      </g><g class="nd" style="animation-delay:1.1s">
+        <circle cx="290" cy="52" r="9" fill="#060708" stroke="#c8ff4d" stroke-width="2"/>
+        <circle cx="290" cy="52" r="3.5" fill="#c8ff4d"/>
+        <text x="290" y="36" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v3</text>
+        <text x="290" y="76" text-anchor="middle" class="mono" font-size="9.5" letter-spacing="1" fill="#c8ff4d">LOCAL ANVIL</text>
+      </g><g class="nd" style="animation-delay:1.7s">
+        <circle cx="420" cy="52" r="9" fill="#060708" stroke="#ffd54a" stroke-width="2"/>
+        <circle cx="420" cy="52" r="3.5" fill="#ffd54a"/>
+        <text x="420" y="36" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v4</text>
+        <text x="436" y="76" text-anchor="start" class="mono" font-size="9.5" letter-spacing="1" fill="#ffd54a">DEDICATED CHAIN</text>
+      </g><g class="nd" style="animation-delay:2.3s">
+        <circle cx="290" cy="132" r="9" fill="#060708" stroke="#9d7bff" stroke-width="2"/>
+        <circle cx="290" cy="132" r="3.5" fill="#9d7bff"/>
+        <text x="290" y="116" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v3′</text>
+        <text x="290" y="156" text-anchor="middle" class="mono" font-size="9.5" letter-spacing="1" fill="#9d7bff">BRANCH</text>
+      </g><g class="nd" style="animation-delay:2.9s">
+        <circle cx="420" cy="132" r="9" fill="#060708" stroke="#ff4d5e" stroke-width="2"/>
+        <circle cx="420" cy="132" r="3.5" fill="#ff4d5e"/>
+        <text x="420" y="116" text-anchor="middle" class="mono" font-size="11" fill="#eceae4">v4′</text>
+        <text x="436" y="156" text-anchor="start" class="mono" font-size="9.5" letter-spacing="1" fill="#ff4d5e">IMPOSSIBLE ON BASE</text>
+      </g></g>
+    <text x="30" y="214" class="mono" font-size="12.5" font-weight="700" letter-spacing="2.5" fill="#4fe3ff">06 · MUTATION ENGINE</text>
+    <text x="30" y="252" class="sans" font-size="30" font-weight="750" letter-spacing="-.8" fill="#eceae4">Evolve the genome.</text>
+    <text x="30" y="284" class="sans" font-size="17" fill="#a3a29d">Version, branch and roll back a chain design.</text><text x="30" y="308" class="sans" font-size="17" fill="#a3a29d">Every change classified by what it touches.</text>
+  </g>
+  <rect x=".5" y=".5" width="579" height="329" rx="20" fill="none" stroke="#fff" stroke-opacity=".09"/>
+  
+</svg>

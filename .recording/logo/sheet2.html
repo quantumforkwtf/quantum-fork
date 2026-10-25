@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" />
+<style>
+  body { margin: 0; background: #060708; color: #eceae4; font: 14px Geist, sans-serif; padding: 30px 40px; }
+  .row { display: flex; align-items: center; gap: 40px; padding: 22px 0; border-bottom: 1px solid #1c1f22; }
+  .row h3 { width: 40px; margin: 0; font: 600 13px 'Geist Mono'; color: #8a8f94; }
+  .nav { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15.5px; letter-spacing: -0.02em; padding: 10px 14px; border: 1px solid #1c1f22; border-radius: 10px; }
+  .light { background: #eceae4; color: #060708; border-radius: 12px; padding: 10px; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<!-- G: bare glyph, heavier -->
+<template id="G">
+  <svg viewBox="0 0 32 32" fill="none">
+    <defs><linearGradient id="gG" x1="7" y1="0" x2="25" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#C8FF4D"/><stop offset="1" stop-color="#4FE3FF"/></linearGradient></defs>
+    <path d="M8 6.5v6.5a8 8 0 0 0 16 0V6.5" stroke="url(#gG)" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M16 4.5v23" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+  </svg>
+</template>
+<!-- H: glyph with a gap where arms pass the stem (two separate states) -->
+<template id="H">
+  <svg viewBox="0 0 32 32" fill="none">
+    <defs>
+      <linearGradient id="gH" x1="7" y1="0" x2="25" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#C8FF4D"/><stop offset="1" stop-color="#4FE3FF"/></linearGradient>
+      <mask id="mH"><rect width="32" height="32" fill="#fff"/><path d="M16 4.5v23" stroke="#000" stroke-width="6.4" stroke-linecap="round"/></mask>
+    </defs>
+    <path d="M8 6.5v6.5a8 8 0 0 0 16 0V6.5" stroke="url(#gH)" stroke-width="3.2" stroke-linecap="round" mask="url(#mH)"/>
+    <path d="M16 4.5v23" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+  </svg>
+</template>
+<!-- I: tile + G glyph -->
+<template id="I">
+  <svg viewBox="0 0 32 32" fill="none">
+    <defs>
+      <linearGradient id="gI" x1="8" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#C8FF4D"/><stop offset="1" stop-color="#4FE3FF"/></linearGradient>
+      <radialGradient id="tI" cx="16" cy="12" r="20" gradientUnits="userSpaceOnUse"><stop stop-color="#1A1F1C"/><stop offset="1" stop-color="#08090A"/></radialGradient>
+    </defs>
+    <rect x=".6" y=".6" width="30.8" height="30.8" rx="8.4" fill="url(#tI)" stroke="#ECEAE4" stroke-opacity=".14" stroke-width="1.2"/>
+    <path d="M10 9v4.6a6 6 0 0 0 12 0V9" stroke="url(#gI)" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M16 7.2v17.6" stroke="#ECEAE4" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+</template>
+<!-- J: tile + H glyph -->
+<template id="J">
+  <svg viewBox="0 0 32 32" fill="none">
+    <defs>
+      <linearGradient id="gJ" x1="8" y1="0" x2="24" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#C8FF4D"/><stop offset="1" stop-color="#4FE3FF"/></linearGradient>
+      <radialGradient id="tJ" cx="16" cy="12" r="20" gradientUnits="userSpaceOnUse"><stop stop-color="#1A1F1C"/><stop offset="1" stop-color="#08090A"/></radialGradient>
+      <mask id="mJ"><rect width="32" height="32" fill="#fff"/><path d="M16 7.2v17.6" stroke="#000" stroke-width="5.4" stroke-linecap="round"/></mask>
+    </defs>
+    <rect x=".6" y=".6" width="30.8" height="30.8" rx="8.4" fill="url(#tJ)" stroke="#ECEAE4" stroke-opacity=".14" stroke-width="1.2"/>
+    <path d="M10 9v4.6a6 6 0 0 0 12 0V9" stroke="url(#gJ)" stroke-width="2.6" stroke-linecap="round" mask="url(#mJ)"/>
+    <path d="M16 7.2v17.6" stroke="#ECEAE4" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+</template>
+<div id="out"></div>
+<script>
+  const sizes = [16, 20, 28, 48, 96, 180]
+  for (const id of ['G', 'H', 'I', 'J']) {
+    const row = document.createElement('div'); row.className = 'row'
+    row.innerHTML = `<h3>${id}</h3>`
+    for (const s of sizes) {
+      const svg = document.getElementById(id).content.firstElementChild.cloneNode(true)
+      svg.setAttribute('width', s); svg.setAttribute('height', s)
+      row.appendChild(svg)
+    }
+    for (const cls of ['nav', 'nav light']) {
+      const nav = document.createElement('div'); nav.className = cls
+      const svg = document.getElementById(id).content.firstElementChild.cloneNode(true)
+      svg.setAttribute('width', 28); svg.setAttribute('height', 28)
+      nav.appendChild(svg); nav.append('Quantum Fork')
+      row.appendChild(nav)
+    }
+    document.getElementById('out').appendChild(row)
+  }
+</script>
+</body>
+</html>

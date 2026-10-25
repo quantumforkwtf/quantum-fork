@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Quantum Fork. Fork reality. Build the next blockchain.">
+<style>
+  .sans{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace}
+  .spin,.spinr,.pop,.fade,.grow,.draw,.blink,.rise{transform-box:fill-box;transform-origin:center}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinr{to{transform:rotate(-360deg)}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes ping{0%{transform:scale(1);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+  @keyframes dash{to{stroke-dashoffset:-32}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+    .stream{animation:flow 1.4s linear infinite}
+    @keyframes flow{to{transform:translateX(70px)}}
+    .grow{opacity:0;animation:grow 5.6s var(--e,cubic-bezier(.2,.7,.1,1)) infinite}
+    @keyframes grow{0%{opacity:0;transform:translateY(8px) scale(.85)}10%{opacity:1;transform:none}82%{opacity:1;transform:none}100%{opacity:0}}
+    .ping{animation:ping 2s ease-out infinite}
+    .flowA,.flowB{stroke-dasharray:2 14;animation:dash 1s linear infinite}
+    .rise{opacity:0;animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
+    .chip{opacity:0;animation:chip 5.6s ease infinite}
+    @keyframes chip{0%,40%{opacity:0}52%,88%{opacity:1}100%{opacity:0}}
+  </style>
+<defs>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".035"/></pattern>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  
+    <radialGradient id="g1" cx="640" cy="430" r="460" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#c8ff4d" stop-opacity=".17"/><stop offset="1" stop-color="#c8ff4d" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx="1080" cy="60" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9d7bff" stop-opacity=".16"/><stop offset="1" stop-color="#9d7bff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="fadeL" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff"/></linearGradient>
+    <mask id="fade"><rect width="628" height="600" fill="url(#fadeL)"/></mask>
+    <clipPath id="frame"><rect width="1200" height="600" rx="24"/></clipPath>
+  
+</defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="600" fill="#060708"/>
+    <rect width="1200" height="600" fill="url(#grid)"/>
+    <rect width="1200" height="600" fill="url(#g1)"/>
+    <rect width="1200" height="600" fill="url(#g2)"/>
+
+    <g class="rise" style="animation-delay:.05s">
+      <rect x="72" y="62" width="3" height="18" fill="#c8ff4d"/>
+      <text x="84" y="76" class="mono" font-size="16" fill="#eceae4">quantum fork<tspan fill="#c8ff4d">⟩</tspan></text>
+      <text x="1128" y="76" text-anchor="end" class="mono" font-size="13" letter-spacing="2" fill="#a3a29d">BLOCKCHAIN LABORATORY · BASE</text>
+    </g>
+    <text x="68" y="172" class="sans rise" font-size="96" font-weight="800" letter-spacing="-4" fill="#eceae4" style="animation-delay:.15s">FORK REALITY.</text>
+    <text x="72" y="228" class="sans rise" font-size="38" font-weight="700" letter-spacing="-1" fill="#c8ff4d" style="animation-delay:.3s">BUILD THE NEXT BLOCKCHAIN.</text>
+    <g class="rise" style="animation-delay:.45s">
+      <text x="72" y="276" class="sans" font-size="19" fill="#a3a29d">Fork live EVM state. Rewrite execution. Experiment with cryptography.</text>
+      <text x="72" y="302" class="sans" font-size="19" fill="#a3a29d">Deploy programmable blockchain environments.</text>
+    </g>
+
+    <text x="72" y="390" class="mono" font-size="12" letter-spacing="1.5" fill="#5a5b5c">BASE · LIVE STATE · BLOCK 49,851,225</text>
+    <g mask="url(#fade)">
+      <line x1="0" y1="430" x2="640" y2="430" stroke="#fff" stroke-opacity=".2"/>
+      <g class="stream"><g transform="translate(-70 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(0 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(70 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(140 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(210 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(280 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(350 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(420 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(490 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(560 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g><g transform="translate(630 408)">
+        <rect width="44" height="44" rx="9" fill="#0f1113" stroke="#fff" stroke-opacity=".2"/>
+        <rect x="10" y="13" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".28"/>
+        <rect x="10" y="21" width="16" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+        <rect x="10" y="29" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".16"/>
+      </g></g>
+    </g>
+
+    <path d="M640 430 C 700 430, 720 360, 790 360 L 1150 360" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="1.5"/>
+    <path d="M640 430 C 700 430, 720 500, 790 500 L 1150 500" fill="none" stroke="#c8ff4d" stroke-opacity=".35" stroke-width="1.5"/>
+    <path class="flowA" d="M640 430 C 700 430, 720 360, 790 360 L 1150 360" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>
+    <path class="flowB" d="M640 430 C 700 430, 720 500, 790 500 L 1150 500" fill="none" stroke="#c8ff4d" stroke-width="1.5"/>
+    <circle r="3.5" fill="#fff">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.0s" path="M640 430 C 700 430, 720 360, 790 360 L 1150 360"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="0.0s"/>
+    </circle><circle r="3.5" fill="#fff">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.8s" path="M640 430 C 700 430, 720 360, 790 360 L 1150 360"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="0.8s"/>
+    </circle><circle r="3.5" fill="#fff">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.6s" path="M640 430 C 700 430, 720 360, 790 360 L 1150 360"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="1.6s"/>
+    </circle>
+    <circle r="3.5" fill="#c8ff4d">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.0s" path="M640 430 C 700 430, 720 500, 790 500 L 1150 500"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="0.0s"/>
+    </circle><circle r="3.5" fill="#c8ff4d">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.8s" path="M640 430 C 700 430, 720 500, 790 500 L 1150 500"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="0.8s"/>
+    </circle><circle r="3.5" fill="#c8ff4d">
+      <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.6s" path="M640 430 C 700 430, 720 500, 790 500 L 1150 500"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.85;1" dur="2.4s" repeatCount="indefinite" begin="1.6s"/>
+    </circle>
+
+    <g class="grow" style="animation-delay:0.00s">
+          <rect x="830" y="338" width="44" height="44" rx="9" fill="rgba(255,255,255,.035)" stroke="#ffffff" stroke-opacity="0.75"/>
+          <rect x="840" y="351" width="24" height="3" rx="1.5" fill="#ffffff" fill-opacity=".55"/>
+          <rect x="840" y="359" width="16" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+          <rect x="840" y="367" width="20" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+        </g><g class="grow" style="animation-delay:0.35s">
+          <rect x="910" y="338" width="44" height="44" rx="9" fill="rgba(255,255,255,.035)" stroke="#ffffff" stroke-opacity="0.75"/>
+          <rect x="920" y="351" width="24" height="3" rx="1.5" fill="#ffffff" fill-opacity=".55"/>
+          <rect x="920" y="359" width="16" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+          <rect x="920" y="367" width="20" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+        </g><g class="grow" style="animation-delay:0.70s">
+          <rect x="990" y="338" width="44" height="44" rx="9" fill="rgba(255,255,255,.035)" stroke="#ffffff" stroke-opacity="0.75"/>
+          <rect x="1000" y="351" width="24" height="3" rx="1.5" fill="#ffffff" fill-opacity=".55"/>
+          <rect x="1000" y="359" width="16" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+          <rect x="1000" y="367" width="20" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+        </g><g class="grow" style="animation-delay:1.05s">
+          <rect x="1070" y="338" width="44" height="44" rx="9" fill="rgba(255,255,255,.035)" stroke="#ffffff" stroke-opacity="0.75"/>
+          <rect x="1080" y="351" width="24" height="3" rx="1.5" fill="#ffffff" fill-opacity=".55"/>
+          <rect x="1080" y="359" width="16" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+          <rect x="1080" y="367" width="20" height="3" rx="1.5" fill="#ffffff" fill-opacity=".3"/>
+        </g>
+    <g class="grow" style="animation-delay:0.00s">
+          <rect x="830" y="478" width="44" height="44" rx="9" fill="rgba(200,255,77,.06)" stroke="#c8ff4d" stroke-opacity="0.75"/>
+          <rect x="840" y="491" width="24" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".55"/>
+          <rect x="840" y="499" width="16" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+          <rect x="840" y="507" width="20" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+        </g><g class="grow" style="animation-delay:0.35s">
+          <rect x="910" y="478" width="44" height="44" rx="9" fill="rgba(255,213,74,.12)" stroke="#ffd54a" stroke-opacity="1"/>
+          <text x="932" y="506" text-anchor="middle" class="mono" font-size="16" font-weight="700" fill="#ffd54a">Δ</text>
+        </g><g class="grow" style="animation-delay:0.70s">
+          <rect x="990" y="478" width="44" height="44" rx="9" fill="rgba(200,255,77,.06)" stroke="#c8ff4d" stroke-opacity="0.75"/>
+          <rect x="1000" y="491" width="24" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".55"/>
+          <rect x="1000" y="499" width="16" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+          <rect x="1000" y="507" width="20" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+        </g><g class="grow" style="animation-delay:1.05s">
+          <rect x="1070" y="478" width="44" height="44" rx="9" fill="rgba(200,255,77,.06)" stroke="#c8ff4d" stroke-opacity="0.75"/>
+          <rect x="1080" y="491" width="24" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".55"/>
+          <rect x="1080" y="499" width="16" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+          <rect x="1080" y="507" width="20" height="3" rx="1.5" fill="#c8ff4d" fill-opacity=".3"/>
+        </g>
+
+    <circle cx="640" cy="430" r="26" fill="#c8ff4d" opacity=".35" filter="url(#soft)"/>
+    <circle class="ping" cx="640" cy="430" r="10" fill="none" stroke="#c8ff4d" style="transform-box:fill-box;transform-origin:center"/>
+    <circle cx="640" cy="430" r="9" fill="#c8ff4d"/>
+    <circle cx="640" cy="430" r="3.5" fill="#060708"/>
+
+    <text x="830" y="322" class="mono" font-size="12" letter-spacing="1.5" fill="#a3a29d">REALITY A · ORIGINAL</text>
+    <text x="830" y="552" class="mono" font-size="12" letter-spacing="1.5" fill="#c8ff4d">REALITY B · REWRITTEN</text>
+    <g class="chip">
+      <text x="1150" y="408" text-anchor="end" class="mono" font-size="12" fill="#3dffa0">A · success · 27,766 gas</text>
+      <text x="1150" y="460" text-anchor="end" class="mono" font-size="12" fill="#ffd54a">B · reverted · 21,160 gas</text>
+      <text x="1150" y="434" text-anchor="end" class="mono" font-size="11" letter-spacing="1.5" fill="#5a5b5c">SAME TX · DIFFERENT REALITY</text>
+    </g>
+  </g>
+  <rect x=".5" y=".5" width="1199" height="599" rx="24" fill="none" stroke="#fff" stroke-opacity=".08"/>
+  
+</svg>

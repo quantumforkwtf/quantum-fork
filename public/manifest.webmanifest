@@ -1,0 +1,13 @@
+{
+  "name": "Quantum Fork — Post-Quantum Blockchain Lab",
+  "short_name": "Quantum Fork",
+  "description": "Launch blockchains, secure digital assets and build applications with post-quantum cryptography. No code required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060708",
+  "theme_color": "#060708",
+  "icons": [
+    { "src": "/qfork-mark.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/qfork-icon.png", "sizes": "1024x1024", "type": "image/png" }
+  ]
+}

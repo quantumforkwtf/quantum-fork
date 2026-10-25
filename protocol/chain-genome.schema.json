@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quantumfork.example/spec/chain-genome-v0.2.schema.json",
+  "title": "Quantum Fork Chain Genome",
+  "description": "Design manifest exported by THE LAB. Describes a species' identity, execution, privacy, cryptographic profile, economics, recovery and lineage. Not a deployable chain specification and not audited.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["spec", "identity", "execution", "privacy", "cryptography", "economics", "recovery", "lineage"],
+  "properties": {
+    "spec": {
+      "const": "qfork/genome/v0.2"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ticker", "supply"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "ticker": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,6}$"
+        },
+        "supply": {
+          "enum": [21000000, 100000000, 1000000000, 10000000000]
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vm", "blockTimeMs", "validators", "modules"],
+      "properties": {
+        "vm": {
+          "enum": ["svm", "evm", "move", "wasm"]
+        },
+        "blockTimeMs": {
+          "enum": [2000, 1000, 400]
+        },
+        "validators": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 128
+        },
+        "modules": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["bridge", "oracle", "governance", "names", "dex"]
+          }
+        }
+      }
+    },
+    "privacy": {
+      "enum": ["public", "shielded", "private-first"]
+    },
+    "cryptography": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile"],
+      "properties": {
+        "profile": {
+          "description": "classical = Ed25519; hybrid = Ed25519 + ML-DSA-65; experimental = full post-quantum suite for research networks only.",
+          "enum": ["classical", "hybrid", "experimental"]
+        }
+      }
+    },
+    "economics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gas", "baseFeeMicros", "treasuryPct", "burnPct"],
+      "properties": {
+        "gas": {
+          "enum": ["fixed", "dynamic"]
+        },
+        "baseFeeMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "treasuryPct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "burnPct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "recovery": {
+      "enum": ["none", "multisig", "threshold", "deadman"]
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "generation", "parent", "mutations"],
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parent": {
+          "description": "Fingerprint of the parent genome, or null for a GEN-0 species.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/fingerprint" }]
+        },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "quantum-shield",
+              "dark-state",
+              "deadman-gene",
+              "turbo-gene",
+              "validator-gene",
+              "fee-gene",
+              "lattice-core"
+            ]
+          }
+        }
+      }
+    },
+    "fingerprint": {
+      "description": "Present on exported manifests. Deterministic hash of the genome fields above.",
+      "$ref": "#/$defs/fingerprint"
+    },
+    "derived": {
+      "description": "Present on exported manifests. Human-readable cryptographic details derived from the profile.",
+      "type": "object"
+    },
+    "status": {
+      "const": "design-manifest"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{32}$"
+    }
+  }
+}

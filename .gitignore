@@ -1,0 +1,25 @@
+node_modules
+dist
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.vercel
+.keys
+.recording/out
+recordings
+.DS_Store
+.recording/shots/qa
+.recording/shots/hero
+.recording/shots/network
+.recording/shots/beginning
+.recording/ref
+.recording/logo/*.png
+.recording/promo/shots
+.recording/promo/stills
+.recording/promo/prev-*.jpg
+
+# local tooling and raw recordings
+.recording/node_modules/
+recordings/*.mp4
+.recording/shots/
