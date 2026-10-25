@@ -267,7 +267,7 @@ function TierPicker({ value, onChange, availability }: { value: DeploymentTier; 
           <button type="button" role="radio" aria-checked={false} disabled className="tier-card is-soon">
             <strong>MAINNET</strong>
             <small>COMING SOON</small>
-            <span>Burn real $QFORK. Opens when $QFORK launches on Pump.fun.</span>
+            <span>Burn real $QFORK. Opens when $QFORK launches on Base.</span>
           </button>
         )}
       </div>
@@ -367,41 +367,6 @@ function ExactTransaction({ prepared, network }: { prepared: PreparedBurn; netwo
         </div>
       </dl>
       <p className="tx-note">This is the canonical SPL burn instruction: tokens are destroyed and total supply falls. Nothing is sent to any wallet.</p>
-    </div>
-  )
-}
-
-const CHAINS: { id: Chain; label: string; detail: string }[] = [
-  { id: 'solana', label: 'SOLANA', detail: 'Burn $QFORK with the SPL burn instruction. Phantom, Solflare, Backpack.' },
-  { id: 'base', label: 'BASE', detail: 'Burn $QFORK on Base with the ERC-20 burn() function. Coinbase Wallet, MetaMask, Rabby.' },
-]
-
-function ChainPicker({ value, onChange, availability, disabled }: { value: Chain; onChange: (chain: Chain) => void; availability: Record<Chain, { available: boolean; reason: string }>; disabled: boolean }) {
-  return (
-    <div className="field">
-      <span className="field-label" id="chain-label">
-        BURN ON
-      </span>
-      <div className="tier-grid" role="radiogroup" aria-labelledby="chain-label">
-        {CHAINS.map((chain) => {
-          const state = availability[chain.id]
-          return (
-            <button
-              key={chain.id}
-              type="button"
-              role="radio"
-              aria-checked={value === chain.id}
-              disabled={disabled}
-              className={`tier-card ${value === chain.id ? 'is-active' : ''} ${state.available ? '' : 'is-soon'}`}
-              onClick={() => onChange(chain.id)}
-            >
-              <strong>{chain.label}</strong>
-              {!state.available && <small>NOT OPEN YET</small>}
-              <span>{state.available ? chain.detail : state.reason}</span>
-            </button>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -572,23 +537,14 @@ function LabBench() {
             : serverTier
   const baseStatus = status?.base ?? null
   const baseGate = baseStatus ? gate(baseStatus.registration) : { available: false, reason: server.state === 'loading' ? 'Checking server…' : 'This server does not support Base yet.' }
-  const solanaGate = gate(status?.tiers[SITE_TIER])
-  const chain: Chain = draft.chain ?? (baseGate.available || !solanaGate.available ? 'base' : 'solana')
+  /* $QFORK burns on Base. Only a draft already registering on Solana devnet keeps its chain. */
+  const chain: Chain = draft.remoteId ? (draft.chain ?? 'solana') : 'base'
   const chainTier: DeploymentTier = chain === 'base' && baseStatus ? baseTier(baseStatus.network) : SITE_TIER
   const tierAvailability: Record<DeploymentTier, { available: boolean; reason: string }> =
     chain === 'base'
       ? { testnet: chainTier === 'testnet' ? baseGate : { available: false, reason: 'Not the Base tier.' }, mainnet: chainTier === 'mainnet' ? baseGate : { available: false, reason: 'Not the Base tier.' } }
       : { testnet: gate(status?.tiers.testnet), mainnet: gate(status?.tiers.mainnet) }
-  const chainAvailability: Record<Chain, { available: boolean; reason: string }> = { solana: solanaGate, base: baseGate }
   const quote = useMemo(() => quoteGenesis(config, 'GENESIS', chain), [config, chain])
-  const chooseChain = (next: Chain) => {
-    if (next === chain) return
-    setError(null)
-    setPrepared(null)
-    setPreparedBase(null)
-    setRemote(null)
-    setDraft((current) => ({ ...current, chain: next, remoteId: null, idemKey: idempotencyKey() }))
-  }
   const chooseAncestor = (next: AncestorId) => {
     if (next === ancestor) return
     setError(null)
@@ -1198,14 +1154,12 @@ function LabBench() {
                   </tr>
                 </tfoot>
               </table>
-              <ChainPicker value={chain} onChange={chooseChain} availability={chainAvailability} disabled={Boolean(remote?.deployment.burn.signature)} />
               <div className="tier-explain">
                 {chain === 'base' ? (
                   <p className="callout is-warn">
                     {baseStatus?.network === 'base'
                       ? `BASE · Burns ${formatNumber(quote.total)} real $QFORK on Base with the token’s burn() function, permanently. The server verifies the burn once the block is finalized, then registers the descendant.`
-                      : `BASE SEPOLIA · Burns ${formatNumber(quote.total)} test QFORK on Base Sepolia. Test tokens have no value. The server verifies the burn once the block is finalized.`}{' '}
-                    Base amounts are {CHAIN_BURN_SCALE.base}× the Solana amounts because the Base token has {CHAIN_BURN_SCALE.base}× the supply, so each burn takes the same share.
+                      : `BASE SEPOLIA · Burns ${formatNumber(quote.total)} test QFORK on Base Sepolia. Test tokens have no value. The server verifies the burn once the block is finalized.`}
                   </p>
                 ) : tier === 'testnet' ? (
                   <p className="callout is-warn">

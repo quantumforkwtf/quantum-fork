@@ -45,7 +45,6 @@ const list = [
   { id: 'bip-39', title: 'BIP-39: Mnemonic code for generating deterministic keys', publisher: 'Bitcoin BIPs', kind: 'standard', url: 'https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki' },
   { id: 'slip-0010', title: 'SLIP-0010: Universal private key derivation from master key', publisher: 'SatoshiLabs', kind: 'standard', url: 'https://github.com/satoshilabs/slips/blob/master/slip-0010.md' },
   { id: 'wallet-standard', title: 'Wallet Standard', publisher: 'Wallet Standard', kind: 'repository', url: 'https://github.com/wallet-standard/wallet-standard' },
-  { id: 'spl-token', title: 'Token and Token-2022 programs (Burn, BurnChecked)', publisher: 'Solana Program Library', kind: 'documentation', url: 'https://www.solana-program.com/docs/token' },
   { id: 'spl-memo', title: 'Memo program', publisher: 'Solana Program Library', kind: 'documentation', url: 'https://www.solana-program.com/docs/memo' },
   { id: 'pump-docs', title: 'Pump public docs and IDL', publisher: 'Pump', kind: 'documentation', url: 'https://github.com/pump-fun/pump-public-docs' },
   { id: 'eth-accounts', title: 'Ethereum accounts (EOAs, keys and addresses)', publisher: 'ethereum.org', kind: 'documentation', url: 'https://ethereum.org/developers/docs/accounts/' },

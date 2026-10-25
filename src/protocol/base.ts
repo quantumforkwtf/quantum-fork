@@ -96,6 +96,13 @@ export function resolveBaseConfig(env: Env, prefix = ''): { config: BaseConfig; 
 }
 
 /** Which registration tier a Base network maps to. */
+/** The chain a descendant burned on. Records from before Base support are Solana; unregistered drafts use `fallback`. */
+export function burnChainOf(item: { receipt?: { chain?: Chain } | null; deployment?: { burn: { chain?: Chain } } | null }, fallback: Chain): Chain {
+  if (item.receipt) return item.receipt.chain ?? 'solana'
+  if (item.deployment) return item.deployment.burn.chain ?? 'solana'
+  return fallback
+}
+
 export function baseTier(network: BaseNetwork): 'mainnet' | 'testnet' {
   return network === 'base' ? 'mainnet' : 'testnet'
 }

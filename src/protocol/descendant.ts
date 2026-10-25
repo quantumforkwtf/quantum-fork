@@ -7,7 +7,7 @@ import { PROFILE_BY_ID, type ProfileId } from './profiles.js'
 export type DeploymentTier = 'testnet' | 'mainnet'
 
 export const TIERS: { id: DeploymentTier; label: string; detail: string }[] = [
-  { id: 'testnet', label: 'DEVNET', detail: 'Burn devnet test QFORK. The server verifies the burn on-chain and registers the descendant. Test tokens have no value.' },
+  { id: 'testnet', label: 'TESTNET', detail: 'Burn test QFORK. The server verifies the burn on-chain and registers the descendant. Test tokens have no value.' },
   { id: 'mainnet', label: 'MAINNET', detail: 'Burn real $QFORK. The server verifies the burn on-chain and registers the descendant.' },
 ]
 

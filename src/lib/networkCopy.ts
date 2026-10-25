@@ -21,10 +21,9 @@ export const NET = {
   registration: REGISTRATION_ON ? (MAINNET ? 'MAINNET' : CLIENT_CONFIG.network.toUpperCase()) : 'NOT OPEN YET',
 }
 
-/** The registration label as the server reports it, so it reads MAINNET once either Base or Solana mainnet registration opens. */
+/** The registration label as the server reports it: MAINNET once registration on Base mainnet opens. */
 export function useRegistrationLabel() {
   const server = useServerStatus()
-  if (server.state !== 'ok') return NET.registration
-  const { base, tiers } = server.status
-  return (base?.network === 'base' && base.registration.available) || tiers.mainnet.available ? 'MAINNET' : NET.registration
+  const base = server.state === 'ok' ? server.status.base : undefined
+  return base?.network === 'base' && base.registration.available ? 'MAINNET' : 'NOT OPEN YET'
 }

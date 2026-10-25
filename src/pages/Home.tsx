@@ -7,7 +7,7 @@ import ExposureMap from '../components/ExposureMap'
 import ModuleCard from '../components/ModuleCard'
 import { ModuleBadge, OriginBadge, Pill } from '../components/Status'
 import { OrganismThumb, ReactorViewport, SpecimenViewport } from '../components/Viewports'
-import { CLIENT_CONFIG, GITHUB_URL, useServerStatus } from '../config'
+import { GITHUB_URL, useServerStatus } from '../config'
 import { blueprintVisual } from '../lab/blueprintVisual'
 import { useRuntime } from '../lab/runtime'
 import { genomeOf, useRegistry } from '../lab/registry'
@@ -485,16 +485,15 @@ function BurnSection() {
   const server = useServerStatus()
   const base = server.state === 'ok' ? server.status.base : undefined
   const baseLive = base?.network === 'base' && base.tokenStatus === 'LIVE' && Boolean(base.token)
-  const solanaLive = CLIENT_CONFIG.tokenStatus === 'LIVE'
   return (
     <section className="section" aria-labelledby="flow-title">
       <header className="section-head">
-        <p className="eyebrow">$QFORK · {baseLive ? 'Live on Base' : solanaLive ? 'Live' : 'Token launch pending'}</p>
+        <p className="eyebrow">$QFORK · {baseLive ? 'Live on Base' : 'Token launch pending'}</p>
         <h2 id="flow-title">
           Burn QFORK. <span>Create the descendant.</span>
         </h2>
         <p className="section-lede">
-          Every descendant is registered by burning QFORK: an ERC-20 burn on Base, or the SPL burn instruction on Solana. The server verifies the burn on-chain before anything is recorded: supply goes down, and
+          Every descendant is registered by burning QFORK, an ERC-20 on Base, with the token’s own burn() function. The server verifies the burn on-chain before anything is recorded: supply goes down, and
           nothing is sent to a wallet.
         </p>
       </header>
@@ -513,11 +512,9 @@ function BurnSection() {
         <p className="muted">
           {baseLive
             ? 'Launched through Clanker. Supply is read from the token contract on Base.'
-            : solanaLive
-              ? 'Market data comes from the Pump.fun bonding curve.'
-              : NET.mainnet
-                ? 'The token has not launched, so there is no price to show.'
-                : 'The token has not launched, so there is no price to show. Until then, registration burns a devnet test token with no value.'}
+            : NET.mainnet
+              ? 'The token launches on Base through Clanker. Until it does, there is no price to show.'
+              : 'The token has not launched, so there is no price to show. Until then, registration burns a test token with no value.'}
         </p>
         <Link to="/qfork" className="btn btn-secondary btn-sm">
           How $QFORK works <ArrowRight size={14} strokeWidth={1.8} />
@@ -549,7 +546,7 @@ const BEGINNING: BeginningStage[] = [
   },
   {
     title: 'Launch its token',
-    body: `A Clanker token on Base, or ${NET.mainnet ? 'a Pump.fun or SPL token on Solana' : 'an SPL token on Solana devnet (Pump.fun on mainnet)'}. Created from your wallet, and recorded once the server reads it from the chain.`,
+    body: 'A Clanker token on Base. Created from your wallet, and recorded once the server reads it from the chain.',
     status: 'AVAILABLE',
     tone: 'var(--green)',
     system: 'Tokens',
@@ -560,7 +557,7 @@ const BEGINNING: BeginningStage[] = [
   },
   {
     title: 'Connect developers',
-    body: 'A manifest, an env template and an SDK config pointing at the real chain and the real token contracts, with Foundry or Solana CLI commands that work today. No keys are ever generated.',
+    body: 'A manifest, an env template and an SDK config pointing at the real chain and the real token contracts, with Foundry commands that work today. No keys are ever generated.',
     status: 'AVAILABLE',
     tone: 'var(--green)',
     system: 'Developers',

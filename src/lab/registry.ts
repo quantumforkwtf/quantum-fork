@@ -1,7 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { DeploymentRecord } from '../protocol/deployment'
 import { type AncestorId, isAncestorId } from '../protocol/ancestors'
-import type { Chain } from '../protocol/base'
 import { ancestorGenome, type DescendantConfig, toChainGenome } from '../protocol/descendant'
 import { EXAMPLE_SPECS } from '../protocol/examples'
 import type { BurnReceipt } from '../protocol/receipt'
@@ -135,13 +134,6 @@ const genomeCache = new Map<string, ChainGenome>()
 export function ancestorOf(item: Descendant): AncestorId {
   if (item.config) return item.config.ancestor
   return isAncestorId(item.id) ? item.id : 'base'
-}
-
-/** The chain a descendant burned on. Records from before Base support are Solana; unregistered drafts use `fallback`. */
-export function burnChainOf(item: Descendant, fallback: Chain): Chain {
-  if (item.receipt) return item.receipt.chain ?? 'solana'
-  if (item.deployment) return item.deployment.burn.chain ?? 'solana'
-  return fallback
 }
 
 /** Visual organism for any registry entry. Ancestors use their own genome. */

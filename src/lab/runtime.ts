@@ -7,13 +7,10 @@ export function useRuntime(): Required<RuntimeCapabilities> {
   if (server.state !== 'ok' || configMismatch(server.status)) return { devnetBurn: false, mainnetBurn: false, burnChain: 'base' }
   const mainnet = CLIENT_CONFIG.network === 'mainnet-beta'
   const base = server.status.base
-  const baseOpen = Boolean(base?.registration.available)
-  const solanaOpen = server.status.tiers[mainnet ? 'mainnet' : 'testnet'].available
   return {
     devnetBurn: !mainnet && server.status.tiers.testnet.available,
-    mainnetBurn: (mainnet && server.status.tiers.mainnet.available) || (baseOpen && base?.network === 'base'),
-    /* The Lab's default: Base, unless only Solana registration is open. */
-    burnChain: baseOpen || !solanaOpen ? 'base' : 'solana',
+    mainnetBurn: base?.network === 'base' && base.registration.available,
+    burnChain: 'base',
   }
 }
 

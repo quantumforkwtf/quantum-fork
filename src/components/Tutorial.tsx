@@ -86,7 +86,7 @@ const TECHNICAL: Step[] = [
   {
     kicker: 'Burns and tiers',
     title: 'Verified server-side or not at all.',
-    body: `Registration is paid with an SPL BurnChecked plus a memo, verified by the server at finalized commitment and processed idempotently. ${NET.mainnet ? 'On MAINNET it burns $QFORK.' : 'DEVNET burns a test token with no value. MAINNET opens when $QFORK launches.'} Descendant tokens are real SPL or Pump.fun mints, verified the same way.`,
+    body: `Registration is paid with a tagged burn() of $QFORK on Base, verified by the server in a finalized block and processed idempotently. ${NET.mainnet ? 'On MAINNET it burns real $QFORK.' : 'Testnet burns a test token with no value. MAINNET opens when $QFORK launches.'} Descendant tokens are real Clanker tokens on Base, verified the same way.`,
     organism: 'descendant',
   },
   {

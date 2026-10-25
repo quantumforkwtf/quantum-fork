@@ -17,7 +17,7 @@ export interface BurnOperationSpec {
 }
 
 export const BURN_OPERATIONS: BurnOperationSpec[] = [
-  { id: 'GENESIS', code: 'RX-1', name: 'Registration', output: 'New descendant · GEN-1', status: 'TESTNET', detail: 'Registers a new descendant. Devnet test QFORK only until $QFORK launches.', base: PRICING.genesisBase },
+  { id: 'GENESIS', code: 'RX-1', name: 'Registration', output: 'New descendant · GEN-1', status: 'TESTNET', detail: 'Registers a new descendant. Test QFORK only until $QFORK launches.', base: PRICING.genesisBase },
   { id: 'FORK', code: 'RX-2', name: 'Fork', output: 'Descendant · GEN+1', status: 'COMING SOON', detail: 'Forks an existing descendant. Forks can be designed in the lab, but only registration burns are processed.', base: PRICING.forkBase },
   { id: 'MUTATION', code: 'RX-3', name: 'Mutation', output: 'Upgraded genome', status: 'COMING SOON', detail: 'Installs a module into a live descendant. Not implemented.', base: null },
   { id: 'APPLICATION_MODULE', code: 'RX-4', name: 'Application module', output: 'Application genome', status: 'COMING SOON', detail: 'Enables an application blueprint such as a vault. Not priced, because no application module exists.', base: null },

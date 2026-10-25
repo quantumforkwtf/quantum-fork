@@ -1,6 +1,6 @@
 import { ArrowRight, Atom, Boxes, ChevronDown, FlaskConical, Network, ScanLine, Volume2, VolumeX } from 'lucide-react'
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { CLIENT_CONFIG, GITHUB_REPO, GITHUB_URL, useServerStatus, X_HANDLE, X_URL } from '../config'
+import { GITHUB_REPO, GITHUB_URL, useServerStatus, X_HANDLE, X_URL } from '../config'
 import { STATUS_TONE } from '../lab/blueprintVisual'
 import { setSoundEnabled, useSoundEnabled } from '../lib/sound'
 import { NET } from '../lib/networkCopy'
@@ -11,7 +11,7 @@ import { FEATURED_BLUEPRINTS, type BlueprintStatus } from '../protocol/blueprint
 import { Link } from '../router'
 import { replayTour } from '../lib/tour'
 import { BuildLink } from './BuildIntents'
-import { WalletButton } from './WalletControl'
+import { BaseWalletButton } from './BaseWallet'
 
 const LINKS = [
   { to: '/create', label: 'Create' },
@@ -144,18 +144,14 @@ function ModeChip() {
   let title = 'Checking the protocol server.'
   let live = false
   if (server.state === 'ok') {
-    const { tiers, network } = server.status
-    if (tiers.mainnet.available) {
-      label = 'MAINNET'
-      title = 'Registration burns real $QFORK, verified on-chain by the server.'
-      live = true
-    } else if (tiers.testnet.available) {
-      label = network.toUpperCase()
-      title = 'Registration burns devnet test QFORK, verified on-chain by the server. Test tokens have no value.'
+    const base = server.status.base
+    if (base?.registration.available) {
+      label = base.network === 'base' ? 'MAINNET' : 'BASE SEPOLIA'
+      title = base.network === 'base' ? 'Registration burns real $QFORK on Base, verified on-chain by the server.' : 'Registration burns test QFORK on Base Sepolia, verified on-chain by the server. Test tokens have no value.'
       live = true
     } else {
       label = 'READ-ONLY'
-      title = network === 'mainnet-beta' ? tiers.mainnet.reason : tiers.testnet.reason
+      title = base?.registration.reason ?? 'Registration opens when $QFORK launches on Base.'
     }
   } else if (server.state === 'offline') {
     label = 'OFFLINE'
@@ -414,7 +410,7 @@ export function Nav() {
             <GitHubLink className="icon-btn nav-x nav-gh" />
             <XLink className="icon-btn nav-x" />
             <ModeChip />
-            <WalletButton />
+            <BaseWalletButton />
             <BuildLink className="btn btn-primary btn-sm nav-cta">Start building</BuildLink>
           </div>
         </div>
@@ -450,6 +446,9 @@ export function Nav() {
 }
 
 export function Footer() {
+  const server = useServerStatus()
+  const base = server.state === 'ok' ? server.status.base : undefined
+  const baseLive = base?.tokenStatus === 'LIVE' && Boolean(base.token)
   return (
     <footer className="footer">
       <div className="footer-inner">
@@ -473,12 +472,12 @@ export function Footer() {
           <div className="footer-copy">
             <p>
               {NET.mainnet
-                ? 'Descendants are registered by burning $QFORK, verified on-chain by the server. Their tokens are real on-chain tokens, on Base or Solana. No chain runs a descendant yet.'
-                : 'Descendants are registered by burning devnet test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real on-chain tokens, on Base or Solana. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}
+                ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet.'
+                : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}
             </p>
             <p>
               Post-quantum here means descendants designed around NIST post-quantum standards; it does not mean quantum-proof.{' '}
-              <Link to="/security">Read the threat model</Link>. $QFORK is a {CLIENT_CONFIG.tokenStatus === 'LIVE' ? 'utility' : 'not-yet-launched utility'} token, and nothing here
+              <Link to="/security">Read the threat model</Link>. $QFORK is a {baseLive ? 'utility' : 'not-yet-launched utility'} token, and nothing here
               is investment advice.
             </p>
           </div>

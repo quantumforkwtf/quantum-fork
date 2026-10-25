@@ -9,15 +9,15 @@ import { type SourceId, SOURCES } from '../protocol/sources'
 
 const THREATS: { threat: string; impact: string; mitigation: string; status: 'MITIGATED' | 'PARTIAL' | 'OPEN' }[] = [
   {
-    threat: 'A malicious or compromised wallet adds instructions to the burn transaction',
-    impact: 'Funds drained in the same signature',
-    mitigation: 'The lab builds the transaction itself, asks only for signTransaction (never sign-and-send), and refuses to broadcast if the signed message differs by a single byte.',
-    status: 'MITIGATED',
+    threat: 'A malicious or compromised wallet changes the burn transaction',
+    impact: 'Funds sent somewhere else instead of burned',
+    mitigation: 'The lab requests exactly one call, token.burn(amount) with the deployment tag and no ETH, after re-checking chain state. A changed call is never credited. A compromised wallet can still sign anything, so check the call in your wallet.',
+    status: 'PARTIAL',
   },
   {
     threat: 'A client claims a burn that never happened',
     impact: 'Deployment granted for free',
-    mitigation: 'The server ignores client-reported amounts, wallets and success. It reads the finalized transaction from its own RPC and checks program, mint, amount, decimals, memo and signer.',
+    mitigation: 'The server ignores client-reported amounts, wallets and success. It reads the transaction and receipt from its own Base RPC, waits for a finalized block, and checks the token contract, the burn() call, amount, tag and sender.',
     status: 'MITIGATED',
   },
   {
@@ -29,7 +29,7 @@ const THREATS: { threat: string; impact: string; mitigation: string; status: 'MI
   {
     threat: 'A transfer to a “dead” wallet is presented as a burn',
     impact: 'Supply not reduced; tokens recoverable',
-    mitigation: 'Only the SPL BurnChecked instruction is accepted. Transfers fail verification.',
+    mitigation: 'Only a direct burn() call is accepted, and the receipt must show exactly one Transfer of that amount to the zero address. Transfers to any wallet fail verification.',
     status: 'MITIGATED',
   },
   {
@@ -47,13 +47,13 @@ const THREATS: { threat: string; impact: string; mitigation: string; status: 'MI
   {
     threat: 'RPC provider outage or incorrect data',
     impact: 'Burns delayed or mis-verified',
-    mitigation: 'Server verification uses finalized commitment. Outages fail closed with “safe to retry”; a signed burn resumes after reload.',
+    mitigation: 'Server verification waits for a finalized Base block. Outages fail closed with “safe to retry”; a sent burn resumes after reload.',
     status: 'PARTIAL',
   },
   {
-    threat: 'A future quantum computer recovers Ed25519 keys',
-    impact: 'Solana accounts, including those holding QFORK, can be spent',
-    mitigation: 'None inside this app. $QFORK itself lives on Solana and is signed with Ed25519. Descendant designs address this; the lab does not.',
+    threat: 'A future quantum computer recovers secp256k1 keys',
+    impact: 'Base accounts, including those holding QFORK, can be spent',
+    mitigation: 'None inside this app. $QFORK is an ERC-20 on Base, held by secp256k1 (ECDSA) accounts like every Base asset. Descendant designs address this; the lab does not.',
     status: 'OPEN',
   },
 ]
@@ -61,29 +61,28 @@ const THREATS: { threat: string; impact: string; mitigation: string; status: 'MI
 const STATUS_TONE = { MITIGATED: 'var(--green)', PARTIAL: 'var(--yellow)', OPEN: 'var(--red)' }
 
 const PROTECTIONS = [
-  'No private keys, seed phrases or secrets are requested, stored or transmitted. Wallets sign locally through the Wallet Standard.',
-  'Every irreversible action has a review screen with the exact instructions, accounts, amount in base units, fee and dry-run result.',
-  'Transactions are dry-run against the RPC before signing; a failed dry run is never sent.',
-  'Burn credit requires server verification at finalized commitment. “BURN VERIFIED” is shown only after it.',
-  'Dangerous capabilities (real burns, registration, Pump.fun launches, experimental modules) are off unless explicitly enabled on the server.',
-  'Token launches are recorded only after the server reads the mint and its creation transaction from the chain and matches the creator to the descendant’s burn wallet.',
-  'Pump.fun launches spend real SOL on mainnet and require a separate acknowledgement before signing.',
+  'No private keys, seed phrases or secrets are requested, stored or transmitted. Your browser wallet signs locally, connected over EIP-6963.',
+  'Every irreversible action has a review screen with the exact call, contract, amount in base units, gas estimate and dry-run result.',
+  'Transactions are dry-run against Base before signing; a failed dry run is never sent.',
+  'Burn credit requires server verification in a finalized Base block. “BURN VERIFIED” is shown only after it.',
+  'Dangerous capabilities (real burns, registration, token launches, experimental modules) are off unless explicitly enabled on the server.',
+  'Token launches are recorded only after the server reads the token and its creation transaction from the chain and matches the creator to the descendant’s burn wallet.',
   'Server logs are structured, carry correlation ids, and redact secrets, tokens and full addresses.',
   'Security headers: no framing, no MIME sniffing, strict referrer policy, restricted browser permissions.',
 ]
 
 const CLASSICAL = [
-  { what: '$QFORK and every Solana wallet', why: 'Ed25519 signatures. The burn you sign is classical.' },
+  { what: '$QFORK and every Base wallet', why: 'secp256k1 (ECDSA) signatures. The burn you sign is classical.' },
   { what: 'Browser ↔ server TLS', why: 'Depends on your browser and the host; hybrid ML-KEM is not guaranteed.' },
   { what: 'RPC providers and explorers', why: 'Third-party infrastructure with classical authentication.' },
-  { what: 'Wallet software', why: 'Derives Ed25519 keys (SLIP-0010). No mainstream Solana wallet uses PQ keys.' },
+  { what: 'Wallet software', why: 'Derives secp256k1 keys (BIP-32). No mainstream Ethereum wallet uses PQ keys.' },
   { what: 'Bridges and oracles', why: 'Attestations are classical unless the bridge itself migrates.' },
   { what: 'Hashes (SHA-256, Blake3)', why: 'Grover gives a quadratic speed-up only; 256-bit hashes keep a large margin.' },
 ]
 
 const ASSUMPTIONS = [
   'NIST FIPS 203/204/205 parameter sets remain unbroken. FIPS 206 (FN-DSA) is not final.',
-  'The Solana model reflects public sources as of its compile date; upstream changes can make findings stale.',
+  'The Base and Solana ancestor models reflect public sources as of their compile date; upstream changes can make findings stale.',
   'Server storage (Upstash Redis) is available and not tampered with. Without it, registration is disabled.',
   'The configured RPC returns correct finalized data.',
 ]
@@ -100,6 +99,7 @@ export default function Security() {
   usePageMeta({ title: 'Security', description: 'Threat model, protections, assumptions and limitations of Quantum Fork.', path: '/security' })
   const server = useServerStatus()
   const flags = server.state === 'ok' ? server.status.flags : CLIENT_CONFIG.flags
+  const base = server.state === 'ok' ? server.status.base : undefined
   const experimental = PQ_MODULES.filter((module) => module.status !== 'PRODUCTION')
 
   return (
@@ -183,10 +183,9 @@ export default function Security() {
         <dl className="flag-grid">
           {(
             [
-              ['ENABLE_REAL_BURNS', flags.realBurns],
-              ['ENABLE_TESTNET_DEPLOYMENTS', flags.testnetDeployments],
-              ['ENABLE_MAINNET_DEPLOYMENTS', flags.mainnetDeployments],
-              ['ENABLE_PUMPFUN_DATA', flags.pumpfunData],
+              ['BASE_TOKEN_STATUS = LIVE', base?.tokenStatus === 'LIVE'],
+              ['BASE_REGISTRATION', Boolean(base?.registration.available)],
+              ['ENABLE_CLANKER_LAUNCH', Boolean(base?.clankerLaunch)],
               ['ENABLE_SCANNER', flags.scanner],
               ['ENABLE_EXPERIMENTAL_PQ', flags.experimentalPq],
             ] as const
@@ -198,7 +197,7 @@ export default function Security() {
           ))}
         </dl>
         <p className="muted">
-          Network: {CLIENT_CONFIG.network}. {server.state === 'ok' ? 'Values read from the server.' : 'Server unreachable; showing build-time values.'}
+          Network: {base?.network === 'base-sepolia' ? 'Base Sepolia' : 'Base'}. {server.state === 'ok' ? 'Values read from the server. Registration also needs a live token and durable storage.' : 'Server unreachable; showing build-time values.'}
         </p>
       </section>
 

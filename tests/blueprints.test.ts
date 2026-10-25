@@ -6,7 +6,7 @@ import { BLUEPRINT_BY_SLUG, BLUEPRINTS, FEATURED_BLUEPRINTS, findBlueprint, INTE
 import { BURN_OPERATIONS, estimateBurn } from '../src/protocol/burnEngine'
 import { defaultConfig, descendantSchema, genomeDiff } from '../src/protocol/descendant'
 import { CHAIN_BURN_SCALE, quoteGenesis } from '../src/protocol/pricing'
-import { burnChainOf, type Descendant } from '../src/lab/registry'
+import { burnChainOf } from '../src/protocol/base'
 
 const bp = (slug: string) => BLUEPRINT_BY_SLUG[slug]
 
@@ -216,10 +216,9 @@ describe('burn engine', () => {
   })
 
   it('reads the burn chain from the record, defaulting legacy records to Solana', () => {
-    const draft = { id: 'x', receipt: null, deployment: null } as unknown as Descendant
-    expect(burnChainOf(draft, 'base')).toBe('base')
-    expect(burnChainOf({ ...draft, receipt: { chain: undefined } } as unknown as Descendant, 'base')).toBe('solana')
-    expect(burnChainOf({ ...draft, deployment: { burn: { chain: 'base' } } } as unknown as Descendant, 'solana')).toBe('base')
+    expect(burnChainOf({ receipt: null, deployment: null }, 'base')).toBe('base')
+    expect(burnChainOf({ receipt: {} }, 'base')).toBe('solana')
+    expect(burnChainOf({ deployment: { burn: { chain: 'base' } } }, 'solana')).toBe('base')
   })
 
   it('only genesis is executable today', () => {
