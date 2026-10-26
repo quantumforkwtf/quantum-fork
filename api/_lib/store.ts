@@ -161,4 +161,6 @@ export const keys = {
   tokensOf: (deploymentId: string) => `qf:tokens:${deploymentId}`,
   tokens: 'qf:tokens',
   faucet: (subject: string) => `qf:faucet:${subject}`,
+  cosignLock: (account: string, id: string) => `qf:cosignlock:${account}:${id}`,
+  cosignDaily: (subject: string, day: number) => `qf:cosign:${subject}:${day}`,
 }

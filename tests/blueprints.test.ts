@@ -94,7 +94,9 @@ describe('compileBlueprint', () => {
       expect(compiled.statusLimitedBy.length).toBeGreaterThan(0)
     }
     expect(compileBlueprint(bp('quantum-chain')).status).toBe('RESEARCH')
-    expect(compileBlueprint(bp('quantum-vault')).status).toBe('RESEARCH')
+    const vaultStatus = compileBlueprint(bp('quantum-vault')).status
+    expect(vaultStatus).not.toBe('RESEARCH')
+    expect(STATUS_RANK[vaultStatus]).toBeLessThanOrEqual(STATUS_RANK[ACCOUNT_STATUS])
     expect(compileBlueprint(bp('quantum-ai-economy')).status).toBe('RESEARCH')
     expect(compileBlueprint(bp('enterprise-quantum-network')).status).toBe('COMING SOON')
     expect(compileBlueprint(bp('quantumize-my-app')).status).toBe('AVAILABLE')
@@ -160,7 +162,7 @@ describe('compileBlueprint', () => {
   it('records the components an answer selects and warns about the unbuilt ones', () => {
     const vault = compileBlueprint(bp('quantum-vault'), { authorize: 'org' })
     expect(vault.genome.components).toContain('org-policy')
-    expect(vault.status).toBe('RESEARCH')
+    expect(STATUS_RANK[vault.status]).toBeLessThanOrEqual(STATUS_RANK[ACCOUNT_STATUS])
     expect(vault.warnings.some((item) => /is not built/.test(item.message))).toBe(false)
 
     const enterprise = compileBlueprint(bp('enterprise-quantum-network'))
@@ -171,11 +173,11 @@ describe('compileBlueprint', () => {
   it('labels the account components by where QForkAccount actually runs', () => {
     const expected = ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'AVAILABLE' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'TESTNET' : 'EXPERIMENTAL'
     expect(ACCOUNT_STATUS).toBe(expected)
-    for (const id of ['pq-keyset', 'threshold-auth', 'org-policy', 'agent-wallets', 'spending-policy'] as const) {
+    for (const id of ['pq-keyset', 'threshold-auth', 'org-policy', 'agent-wallets', 'spending-policy', 'hybrid-auth', 'pq-recovery', 'guardian-recovery'] as const) {
       expect(COMPONENT_BY_ID[id]).toMatchObject({ status: expected, href: '/account' })
       expect(COMPONENT_BY_ID[id].implementation).toMatch(/QForkAccount/)
     }
-    for (const id of ['hybrid-auth', 'pq-recovery', 'guardian-recovery'] as const) expect(COMPONENT_BY_ID[id].status).toBe('RESEARCH')
+    for (const id of ['hybrid-auth', 'pq-recovery', 'guardian-recovery'] as const) expect(COMPONENT_BY_ID[id].implementation).toMatch(/server-trusted|Server-trusted/)
     expect(COMPONENT_BY_ID['threshold-auth'].implementation).toMatch(/classical, not hybrid/)
   })
 

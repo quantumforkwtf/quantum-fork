@@ -199,6 +199,35 @@ the link sees the exact same chain you designed. On-chain anchoring goes through
 [`QForkRegistry`](./contracts/src/QForkRegistry.sol), a permissionless record of configuration hashes
 on Base with no owner, no fees and no upgrade path.
 
+## 09 · Accounts and the post-quantum co-signer
+
+> **Two keys to move funds, one of them post-quantum.** `/account`
+
+[`QForkAccount`](./contracts/src/QForkAccount.sol) is an m-of-n account on Base: owners approve
+proposals, agents spend inside per-asset limits, any owner can freeze an agent, and the account
+commits to a hash of its owners' ML-DSA and SLH-DSA public keys.
+
+A **co-signer** is one more owner. It approves a proposal only after checking post-quantum signatures
+against that commitment:
+
+| Proposal | Needs |
+| --- | --- |
+| Payments, calls, agent limits | One ML-DSA-65 signature from the daily key |
+| Owners, threshold, key set | The recovery threshold of SLH-DSA recovery or guardian signatures |
+
+With 2 of 3 owners (your wallet, the co-signer, a backup wallet), a stolen wallet key cannot move
+funds, and a lost wallet is replaced with the recovery key. Keys are generated and used in the browser.
+
+```bash
+npm run cosigner                           # Base, on 127.0.0.1:7454
+npm run cosigner -- --network base-sepolia # testnet
+```
+
+It generates its own key in `~/.qfork-cosigner/key.json` (mode 0600) on first run and only answers
+the origins you allow. A hosted co-signer (`/api/cosign`) runs the same checks where it is enabled.
+Either way the co-signer is **server-trusted**: Base only sees its ordinary ECDSA approval, so the
+post-quantum check is as strong as the machine running it. Base itself stays classical.
+
 <img src=".github/assets/divider.svg" width="100%" alt="">
 
 ## Architecture

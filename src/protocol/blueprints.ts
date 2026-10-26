@@ -72,7 +72,6 @@ export interface AppComponent {
   href?: string
 }
 
-const DESIGN_ONLY = 'Design only. No Quantum Fork implementation exists.'
 const GUIDANCE = 'Guidance only. The change is made in your own stack with upstream libraries.'
 
 /** Follows the recorded factory: AVAILABLE on Base, TESTNET on Base Sepolia, else EXPERIMENTAL (local chain only). */
@@ -85,7 +84,16 @@ const ACCOUNT_BUILT = ACCOUNT_FACTORY_DEPLOYMENTS.base
     : 'Built as QForkAccount, a Base contract tested on a local chain and not yet deployed.'
 
 export const COMPONENTS: AppComponent[] = [
-  { id: 'hybrid-auth', code: 'AC-01', name: 'HYBRID AUTHORIZATION', summary: 'A withdrawal needs the owner’s Base signature and a separate post-quantum authorization checked by the vault.', primitive: 'secp256k1 ECDSA (Base) + ML-DSA-65 (vault policy)', status: 'RESEARCH', implementation: DESIGN_ONLY },
+  {
+    id: 'hybrid-auth',
+    code: 'AC-01',
+    name: 'HYBRID AUTHORIZATION',
+    summary: 'A payment needs the owner’s Base signature and a post-quantum signature, checked by a co-signer that is itself one of the owners.',
+    primitive: 'secp256k1 ECDSA (Base) + ML-DSA-65 checked by a co-signer',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} The co-signer runs on your own machine (npm run cosigner) or, where enabled, hosted by Quantum Fork. It is server-trusted: Base only sees its ordinary approval, so the post-quantum check is as strong as the machine that runs it.`,
+    href: '/account',
+  },
   {
     id: 'pq-keyset',
     code: 'AC-02',
@@ -116,8 +124,26 @@ export const COMPONENTS: AppComponent[] = [
     implementation: `${ACCOUNT_BUILT} Every change is a proposal the threshold must approve; any single owner can freeze an agent at once.`,
     href: '/account',
   },
-  { id: 'pq-recovery', code: 'AC-05', name: 'PQ RECOVERY KEY', summary: 'A hash-based recovery key is committed in advance and revealed only to recover.', primitive: 'SLH-DSA-SHA2-128s', status: 'RESEARCH', implementation: DESIGN_ONLY },
-  { id: 'guardian-recovery', code: 'AC-06', name: 'RECOVERY GUARDIANS', summary: 'Named guardians approve a recovery together, each with a post-quantum key.', primitive: 'm-of-n SLH-DSA guardian approvals', status: 'RESEARCH', implementation: DESIGN_ONLY },
+  {
+    id: 'pq-recovery',
+    code: 'AC-05',
+    name: 'PQ RECOVERY KEY',
+    summary: 'A hash-based recovery key is committed in advance and used only to change who controls the account.',
+    primitive: 'SLH-DSA-SHA2-128s checked by a co-signer',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} The co-signer approves a change of owners, threshold or key set only with a valid signature from the committed recovery key; the daily key cannot. Server-trusted: Base does not verify it.`,
+    href: '/account',
+  },
+  {
+    id: 'guardian-recovery',
+    code: 'AC-06',
+    name: 'RECOVERY GUARDIANS',
+    summary: 'Named guardians approve a recovery together, each with a post-quantum key.',
+    primitive: 'm-of-n ML-DSA-65 or SLH-DSA guardian signatures checked by a co-signer',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} Guardians make a key in their browser; their public keys and the recovery quorum go into the committed key set, and the co-signer counts each guardian once. Server-trusted: Base does not verify it.`,
+    href: '/account',
+  },
   { id: 'signer-transport', code: 'AC-07', name: 'PQ SIGNER TRANSPORT', summary: 'Hybrid post-quantum key exchange between owners and any off-chain signing service.', primitive: 'X25519MLKEM768', status: 'RESEARCH', implementation: GUIDANCE },
   {
     id: 'agent-wallets',
@@ -383,32 +409,32 @@ export const BLUEPRINTS: Blueprint[] = [
     index: '02',
     name: 'Quantum Vault',
     headline: 'Protect digital assets with a post-quantum authorization layer.',
-    description: 'Design a vault where moving assets needs a post-quantum authorization in addition to a normal Base signature. It is a contract on Base, not a new blockchain.',
+    description: `A Base account where moving assets needs a post-quantum signature in addition to a normal Base signature. It is a contract on Base, not a new blockchain, and it runs ${ACCOUNT_WHERE} as QForkAccount with a co-signer.`,
     category: 'APPLICATION',
     visualType: 'vault',
     tone: 'cyan',
     visualLabels: ['CLASSICAL AUTH', 'PQ AUTH', 'RECOVERY'],
     ancestor: 'your-application',
     idealFor: ['DAO TREASURIES', 'PROTOCOL FUNDS', 'LONG-TERM CUSTODY', 'TOKENIZED ASSETS'],
-    building: 'A vault contract that holds assets on Base and only releases them when both a classical signature and a post-quantum authorization approve.',
+    building: 'A QForkAccount whose owners include a post-quantum co-signer: assets move only when a wallet signature and the co-signer’s approval, given after it checks an ML-DSA signature from the account’s committed key, reach the threshold.',
     configures: ['Who can authorize a withdrawal', 'Post-quantum key architecture for the vault’s owners', 'How the vault is recovered', 'Security profile'],
     securityModel: [
-      'Every withdrawal needs the owner’s Base signature and a separate ML-DSA authorization checked by the vault. Breaking one of them is not enough to move assets out of the vault.',
+      'With 2 of 3 owners (your wallet, the co-signer, a backup wallet), every payment needs a wallet signature and the co-signer, which approves only after checking an ML-DSA signature from your committed daily key. Stealing the wallet key alone is not enough.',
       'Owner keys are committed by hash, so they can rotate without moving the assets.',
-      'Recovery uses hash-based keys committed in advance.',
+      'Changing owners needs the SLH-DSA recovery key, or a quorum of guardians, committed in advance.',
     ],
     remainsClassical: [
       'Base itself. Its transactions, sequencer and settlement stay classical. The vault does not make Base quantum-resistant.',
       'Anything outside the vault: wallets, token balances and contracts the vault does not control.',
-      'The vault contract’s upgrade admin, unless it is also placed behind the vault’s authorization.',
+      'The co-signer’s own approval. It is an ordinary ECDSA key, and Base never sees the ML-DSA signature, so the post-quantum check holds only while the co-signer’s machine and key are secure.',
     ],
-    infrastructure: ['No vault contract exists in this build. You can configure the genome only.', 'Nothing is deployed and nothing can be burned for it.'],
+    infrastructure: [`QForkAccount runs ${ACCOUNT_WHERE}. The co-signer runs on your machine with npm run cosigner, or is hosted by Quantum Fork where enabled.`, 'Nothing is burned for it; an account costs only Base gas.'],
     compatibility: [
-      { label: 'Base', verdict: 'UNCHANGED', detail: 'The vault would be a contract on Base. Base does not change.' },
-      { label: 'Wallets', verdict: 'PARTIAL', detail: 'The classical half works with any EVM wallet. No wallet produces the post-quantum half today.' },
-      { label: 'Gas', verdict: 'UNSOLVED', detail: 'An ML-DSA-65 signature (3,309 B) fits in a Base transaction, but carrying it costs about 52,600 gas of calldata and verifying it in Solidity costs far more. No production verifier exists.' },
+      { label: 'Base', verdict: 'UNCHANGED', detail: 'The vault is a contract on Base. Base does not change.' },
+      { label: 'Wallets', verdict: 'PARTIAL', detail: 'The classical half works with any EVM wallet. The post-quantum half is signed in the browser from your key file; no wallet produces it.' },
+      { label: 'Gas', verdict: 'PARTIAL', detail: 'The co-signer checks ML-DSA off-chain, so it adds only one approval transaction. Verifying ML-DSA inside a Base contract (3,309 B of signature, far more gas to verify) is still unsolved.' },
     ],
-    limitations: ['No vault contract has been written.', 'Verifying ML-DSA in a Base contract at an acceptable gas cost is an open engineering problem.'],
+    limitations: ['The post-quantum check is made by the co-signer, not by Base or the contract: it is server-trusted.', 'Verifying ML-DSA in a Base contract at an acceptable gas cost is an open engineering problem.'],
     recommendedGenome: { ...APPLICATION_BASE, authorization: 'single-owner', keyArchitecture: 'pq-commitment', recovery: 'pq-commitment', networkType: 'on-base', components: ['hybrid-auth', 'pq-keyset'], subject: 'CRYPTO TREASURY' },
     optionalModules: [],
     requiredCapabilities: ['platform:lab', 'component:hybrid-auth', 'component:pq-keyset'],

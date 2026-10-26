@@ -4,7 +4,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/scan.ts": { "maxDuration": 60 }
+    "api/scan.ts": { "maxDuration": 60 },
+    "api/cosign.ts": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/species/:id", "destination": "/api/page?kind=species&id=:id" },

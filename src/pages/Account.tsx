@@ -1,8 +1,8 @@
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js'
 import { slh_dsa_sha2_128s } from '@noble/post-quantum/slh-dsa.js'
-import { ArrowRight, ArrowUpRight, Check, Download, KeyRound, Plus, RefreshCw, Snowflake, Trash2 } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Check, Download, KeyRound, Plus, RefreshCw, Snowflake, Trash2, Upload } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
-import { decodeFunctionData, encodeFunctionData, erc20Abi, formatEther, formatUnits, getAddress, type Hex, isAddress, parseUnits, toHex, zeroHash } from 'viem'
+import { decodeFunctionData, encodeFunctionData, erc20Abi, formatEther, formatUnits, getAddress, type Hex, hexToBytes, isAddress, keccak256, parseUnits, toHex, zeroHash } from 'viem'
 import { BaseWalletPanel } from '../components/BaseWallet'
 import FailurePanel from '../components/FailurePanel'
 import { ACCOUNT_CHAIN_ID, ACCOUNT_FACTORY, ACCOUNT_MAINNET, ACCOUNT_NETWORK, ACCOUNT_NETWORK_LABEL as NET, accountReader, sendAccountTx } from '../lib/evm/account'
@@ -21,7 +21,11 @@ import {
   ETH,
   executeCalldata,
   freezeCalldata,
+  KEYSET_PUBLIC_KEY_BYTES,
+  KEYSET_ROLES,
+  type KeyRole,
   type KeysetDescriptor,
+  type KeysetScheme,
   keysetCommitment,
   MAX_OWNERS,
   NO_ALLOWANCE,
@@ -34,9 +38,11 @@ import {
   spendCalldata,
   submitCalldata,
   validateAllowance,
+  validateKeyset,
   validateOwners,
   validateScopeSelector,
 } from '../protocol/account'
+import { type CosignClass, cosignClass, cosignDigest, type PqSignature, signCosign, verifyCosignSignature } from '../protocol/cosigner'
 import { shortAddress } from '../protocol/address'
 import { baseExplorerAddress, baseExplorerTx } from '../protocol/base'
 import { Link } from '../router'
@@ -299,15 +305,22 @@ interface GeneratedKeyset {
   file: string
 }
 
-function generateKeyset(): GeneratedKeyset {
+/** Someone else's post-quantum public key. They keep the secret half and sign recoveries with it. */
+interface GuardianKey {
+  scheme: KeysetScheme
+  publicKey: Hex
+}
+
+function generateKeyset(guardians: GuardianKey[] = [], recoveryThreshold = 1): GeneratedKeyset {
   const authorize = ml_dsa65.keygen()
   const recovery = slh_dsa_sha2_128s.keygen()
   const descriptor: KeysetDescriptor = {
     version: 1,
-    recoveryThreshold: 1,
+    recoveryThreshold,
     keys: [
       { scheme: 'ml-dsa-65', role: 'authorize', publicKey: toHex(authorize.publicKey), label: 'Daily key' },
       { scheme: 'slh-dsa-sha2-128s', role: 'recovery', publicKey: toHex(recovery.publicKey), label: 'Recovery key' },
+      ...guardians.map((guardian, index) => ({ scheme: guardian.scheme, role: 'guardian' as const, publicKey: guardian.publicKey, label: `Guardian ${index + 1}` })),
     ],
   }
   const commitment = keysetCommitment(descriptor)
@@ -338,16 +351,81 @@ function download(name: string, text: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+async function readJsonFile(file: File): Promise<unknown> {
+  if (file.size > 1024 * 1024) throw new Error('That file is too large to be a key file.')
+  try {
+    return JSON.parse(await file.text())
+  } catch {
+    throw new Error('That file is not JSON.')
+  }
+}
+
+const isScheme = (value: unknown): value is KeysetScheme => typeof value === 'string' && value in KEYSET_PUBLIC_KEY_BYTES
+const isKeyHex = (value: unknown, bytes?: number): value is Hex => typeof value === 'string' && /^0x([0-9a-fA-F]{2})+$/.test(value) && (bytes === undefined || (value.length - 2) / 2 === bytes)
+
+function parseGuardianFile(raw: unknown): GuardianKey {
+  const file = raw as { format?: unknown; scheme?: unknown; publicKey?: unknown } | null
+  if (file?.format !== 'qfork.guardian.v1' || !isScheme(file.scheme) || !isKeyHex(file.publicKey, KEYSET_PUBLIC_KEY_BYTES[file.scheme])) throw new Error('That is not a Quantum Fork guardian key file.')
+  return { scheme: file.scheme, publicKey: file.publicKey }
+}
+
+/** Adds guardians' public keys to a key set before it is generated, and sets how many recoverers must agree. */
+function GuardianPicker({ guardians, onChange, threshold, onThreshold }: { guardians: GuardianKey[]; onChange: (next: GuardianKey[]) => void; threshold: number; onThreshold: (next: number) => void }) {
+  const [error, setError] = useState<string | null>(null)
+  const add = async (file: File | undefined) => {
+    if (!file) return
+    setError(null)
+    try {
+      const guardian = parseGuardianFile(await readJsonFile(file))
+      if (guardians.some((item) => same(item.publicKey, guardian.publicKey))) throw new Error('That guardian is already added.')
+      if (guardians.length >= 8) throw new Error('At most 8 guardians.')
+      onChange([...guardians, guardian])
+    } catch (caught) {
+      setError((caught as Error).message)
+    }
+  }
+  return (
+    <div className="acct-guardians">
+      {guardians.map((guardian, index) => (
+        <div key={guardian.publicKey} className="acct-guardian">
+          <span>
+            Guardian {index + 1} · {guardian.scheme.toUpperCase()} · <code>{shortAddress(guardian.publicKey, 8, 6)}</code>
+          </span>
+          <button type="button" className="icon-btn" aria-label={`Remove guardian ${index + 1}`} onClick={() => onChange(guardians.filter((item) => item !== guardian))}>
+            <Trash2 size={14} strokeWidth={1.8} />
+          </button>
+        </div>
+      ))}
+      <label className="btn btn-quiet btn-sm acct-file">
+        <input type="file" accept="application/json,.json" onChange={(event) => void add(event.target.files?.[0]).finally(() => (event.target.value = ''))} />
+        <Upload size={14} strokeWidth={1.8} /> Add a guardian’s public key
+      </label>
+      {guardians.length > 0 && (
+        <Field label={`Recovery needs, of ${guardians.length + 1}`} hint={`Your recovery key and the guardians count alike: any ${threshold} of them can approve a change of owners.`}>
+          <Stepper value={threshold} min={1} max={guardians.length + 1} onChange={onThreshold} />
+        </Field>
+      )}
+      {error && <small className="acct-bad">{error}</small>}
+    </div>
+  )
+}
+
 /** Generates ML-DSA-65 and SLH-DSA keys locally. The commitment can only be used once the secret file is saved. */
 function KeysetMaker({ onReady }: { onReady: (commitment: Hex | null) => void }) {
   const [keys, setKeys] = useState<GeneratedKeyset | null>(null)
   const [saved, setSaved] = useState(false)
+  const [guardians, setGuardians] = useState<GuardianKey[]>([])
+  const [threshold, setThreshold] = useState(1)
   useEffect(() => onReady(keys && saved ? keys.commitment : null), [keys, saved, onReady])
+  useEffect(() => setThreshold((value) => Math.min(value, guardians.length + 1)), [guardians.length])
   if (!keys)
     return (
-      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setKeys(generateKeyset())}>
-        <KeyRound size={14} strokeWidth={1.8} /> Generate post-quantum keys
-      </button>
+      <div className="acct-keyset">
+        <GuardianPicker guardians={guardians} onChange={setGuardians} threshold={threshold} onThreshold={setThreshold} />
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setKeys(generateKeyset(guardians, threshold))}>
+          <KeyRound size={14} strokeWidth={1.8} /> Generate post-quantum keys
+        </button>
+      </div>
     )
   return (
     <div className="acct-keyset">
@@ -360,6 +438,12 @@ function KeysetMaker({ onReady }: { onReady: (commitment: Hex | null) => void })
             </dd>
           </div>
         ))}
+        <div>
+          <dt>Recovery</dt>
+          <dd>
+            {keys.descriptor.recoveryThreshold} of {keys.descriptor.keys.length - 1} recovery and guardian keys
+          </dd>
+        </div>
         <div>
           <dt>Commitment</dt>
           <dd>
@@ -946,6 +1030,434 @@ function Keyset({ account, isOwner, tx }: { account: AccountState; isOwner: bool
   )
 }
 
+/* ---------- co-signer ---------- */
+
+const COSIGNER_URL = 'qfork.cosigner.url'
+const COSIGNER_DEFAULT_URL = 'http://127.0.0.1:7454'
+const COSIGNER_COMMAND = `npm run cosigner${ACCOUNT_MAINNET ? '' : ' -- --network base-sepolia'}`
+
+interface CosignerInfo {
+  address: Hex
+  chainId: number
+  mode: 'self-hosted' | 'hosted'
+  balance: bigint | null
+}
+
+interface LoadedKeys {
+  descriptor: KeysetDescriptor
+  secretKeys: { scheme: KeysetScheme; role: KeyRole; secretKey: Hex }[]
+}
+
+function parseKeyFile(raw: unknown): LoadedKeys {
+  const file = raw as { format?: unknown; descriptor?: KeysetDescriptor; secretKeys?: unknown } | null
+  if (file?.format !== 'qfork.keyset.v1' || !file.descriptor || !Array.isArray(file.secretKeys)) throw new Error('That is not a Quantum Fork key file.')
+  const problem = validateKeyset(file.descriptor)
+  if (problem) throw new Error(`The key file’s key set is invalid: ${problem}`)
+  const secretKeys = file.secretKeys.map((entry) => {
+    const key = entry as { scheme?: unknown; role?: unknown; secretKey?: unknown }
+    if (!isScheme(key.scheme) || !KEYSET_ROLES.includes(key.role as KeyRole) || !isKeyHex(key.secretKey)) throw new Error('The key file has a malformed secret key.')
+    return { scheme: key.scheme, role: key.role as KeyRole, secretKey: key.secretKey }
+  })
+  return { descriptor: file.descriptor, secretKeys }
+}
+
+/** Accepts a signature object, an array of them, or one per line. */
+function parseSignatures(text: string): PqSignature[] {
+  const trimmed = text.trim()
+  if (!trimmed) return []
+  let items: unknown[]
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    items = Array.isArray(parsed) ? parsed : [parsed]
+  } catch {
+    items = trimmed.split(/\n+/).map((line) => {
+      try {
+        return JSON.parse(line) as unknown
+      } catch {
+        throw new Error('Paste guardian signatures exactly as they were copied.')
+      }
+    })
+  }
+  return items.map((item) => {
+    const entry = item as { publicKey?: unknown; signature?: unknown }
+    if (!isKeyHex(entry?.publicKey) || !isKeyHex(entry?.signature)) throw new Error('Each guardian signature needs a publicKey and a signature.')
+    return { publicKey: entry.publicKey, signature: entry.signature }
+  })
+}
+
+const digestOf = (account: AccountState, proposal: ProposalState) =>
+  cosignDigest({ chainId: ACCOUNT_CHAIN_ID, account: account.address, proposalId: proposal.id, to: proposal.to, value: proposal.value, data: proposal.data, keyset: account.keyset })
+
+/** Signs with every key in the file that may approve this kind of proposal, keeping those the key set recognises. */
+function signWithFile(keys: LoadedKeys, roles: readonly KeyRole[], digest: Hex): PqSignature[] {
+  const signatures: PqSignature[] = []
+  for (const secret of keys.secretKeys.filter((key) => roles.includes(key.role))) {
+    const signature = signCosign(secret.scheme, hexToBytes(secret.secretKey), digest)
+    const match = keys.descriptor.keys.find((key) => key.scheme === secret.scheme && key.role === secret.role && !signatures.some((item) => same(item.publicKey, key.publicKey)) && verifyCosignSignature(key.scheme, key.publicKey, signature, digest))
+    if (match) signatures.push({ publicKey: match.publicKey, signature })
+  }
+  return signatures
+}
+
+const yieldToPaint = () => new Promise((resolve) => setTimeout(resolve, 30))
+
+function KeyFileInput({ label, onLoad }: { label: string; onLoad: (raw: unknown) => void }) {
+  const [error, setError] = useState<string | null>(null)
+  return (
+    <>
+      <label className="btn btn-secondary btn-sm acct-file">
+        <input
+          type="file"
+          accept="application/json,.json"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (!file) return
+            setError(null)
+            readJsonFile(file).then(onLoad).catch((caught: Error) => setError(caught.message))
+          }}
+        />
+        <Upload size={14} strokeWidth={1.8} /> {label}
+      </label>
+      {error && <small className="acct-bad">{error}</small>}
+    </>
+  )
+}
+
+function useCosignerInfo(where: 'self' | 'hosted', url: string, reader: Reader) {
+  const [info, setInfo] = useState<{ state: 'idle' | 'loading' } | { state: 'ok'; info: CosignerInfo } | { state: 'error'; message: string }>({ state: 'idle' })
+  const check = useCallback(async () => {
+    setInfo({ state: 'loading' })
+    try {
+      const response = await fetch(where === 'hosted' ? '/api/cosign' : `${url.replace(/\/$/, '')}/v1/info`, { headers: { Accept: 'application/json' } })
+      const body = (await response.json()) as { address?: Hex | null; chainId?: number; mode?: CosignerInfo['mode']; enabled?: boolean; name?: string }
+      if (where === 'hosted' && body.enabled === false) return setInfo({ state: 'error', message: 'The hosted co-signer is not switched on yet. Run your own instead.' })
+      if (body.name !== 'qfork-cosigner' || !body.address || !isAddress(body.address)) throw new Error('That address does not answer like a Quantum Fork co-signer.')
+      if (body.chainId !== ACCOUNT_CHAIN_ID) return setInfo({ state: 'error', message: `That co-signer runs on chain ${body.chainId}; this account is on ${NET}. Start it with \`${COSIGNER_COMMAND}\`.` })
+      const balance = await reader.getBalance({ address: body.address }).catch(() => null)
+      setInfo({ state: 'ok', info: { address: getAddress(body.address), chainId: body.chainId, mode: body.mode ?? (where === 'hosted' ? 'hosted' : 'self-hosted'), balance } })
+    } catch (caught) {
+      setInfo({ state: 'error', message: where === 'self' ? `Nothing answered at ${url}. Start the co-signer on this machine with \`${COSIGNER_COMMAND}\`.` : ((caught as Error).message ?? 'The hosted co-signer did not answer.') })
+    }
+  }, [where, url, reader])
+  return { info, check }
+}
+
+/**
+ * Sends a proposal to the account's co-signer with post-quantum signatures. The co-signer is one
+ * owner among several; it approves only after checking those signatures against the key set.
+ */
+function Cosigner({ account, reader, isOwner, tx, onDone }: { account: AccountState; reader: Reader; isOwner: boolean; tx: Tx; onDone: () => void }) {
+  const [where, setWhere] = useState<'self' | 'hosted'>('self')
+  const [url, setUrl] = useState(() => localStorage.getItem(COSIGNER_URL) ?? COSIGNER_DEFAULT_URL)
+  const { info, check } = useCosignerInfo(where, url, reader)
+  const [keys, setKeys] = useState<LoadedKeys | null>(null)
+  const [keyError, setKeyError] = useState<string | null>(null)
+  const [pasted, setPasted] = useState('')
+  const [selected, setSelected] = useState<string>('')
+  const [busy, setBusy] = useState<string | null>(null)
+  const [result, setResult] = useState<{ ok: true; hash: Hex; kind: CosignClass } | { ok: false; message: string } | null>(null)
+
+  useEffect(() => {
+    if (where === 'hosted') void check()
+  }, [where, check])
+
+  const cosigner = info.state === 'ok' ? info.info : null
+  const cosignerOwns = Boolean(cosigner && account.owners.some((owner) => same(owner, cosigner.address)))
+  const open = account.proposals.filter((proposal) => !proposal.executed && !proposal.cancelled)
+  const waiting = cosigner ? open.filter((proposal) => !proposal.approvedBy.some((owner) => same(owner, cosigner.address))) : open
+  const proposal = waiting.find((item) => item.id.toString() === selected) ?? waiting[0] ?? null
+  const kind = proposal ? cosignClass(account.address, proposal) : null
+  const needed = kind === 'recovery' ? (keys?.descriptor.recoveryThreshold ?? null) : 1
+
+  const loadKeys = (raw: unknown) => {
+    setKeyError(null)
+    try {
+      const loaded = parseKeyFile(raw)
+      if (keysetCommitment(loaded.descriptor) !== account.keyset) throw new Error('This key file is not the key set committed to this account.')
+      setKeys(loaded)
+    } catch (caught) {
+      setKeys(null)
+      setKeyError((caught as Error).message)
+    }
+  }
+
+  const send = async () => {
+    if (!proposal || !keys || !kind || !cosigner) return
+    setResult(null)
+    try {
+      const extra = parseSignatures(pasted)
+      setBusy(kind === 'recovery' ? 'Signing with your recovery key (SLH-DSA takes a few seconds)…' : 'Signing with your daily key…')
+      await yieldToPaint()
+      const digest = digestOf(account, proposal)
+      const signatures = [...signWithFile(keys, kind === 'authorize' ? ['authorize'] : ['recovery', 'guardian'], digest), ...extra]
+      setBusy('Waiting for the co-signer to check the signatures and approve on-chain…')
+      const response = await fetch(where === 'hosted' ? '/api/cosign' : `${url.replace(/\/$/, '')}/v1/cosign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: 1, chainId: ACCOUNT_CHAIN_ID, account: account.address, proposalId: proposal.id.toString(), descriptor: keys.descriptor, signatures }),
+      })
+      const body = (await response.json().catch(() => null)) as { hash?: Hex; class?: CosignClass; error?: { message?: string } } | null
+      if (!response.ok || !body?.hash) throw new Error(body?.error?.message ?? `The co-signer answered ${response.status}.`)
+      setResult({ ok: true, hash: body.hash, kind: body.class ?? kind })
+      toast(`Co-signer approved #${proposal.id}`)
+      onDone()
+    } catch (caught) {
+      setResult({ ok: false, message: (caught as Error)?.message ?? 'The co-signer could not be reached.' })
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <section className="acct-section">
+      <header>
+        <h2>Post-quantum co-signer</h2>
+        <span className="mono-label">{cosigner ? (cosignerOwns ? 'Owner of this account' : 'Not an owner yet') : 'Not connected'}</span>
+      </header>
+      <p className="acct-note">
+        A co-signer is one more owner of the account. It approves a proposal only after checking a post-quantum signature: your ML-DSA daily key for payments and other actions, or your SLH-DSA recovery key and guardians for changes to the owners, threshold or key set. Base itself still only checks the co-signer’s ordinary signature, so you are trusting the machine it runs on to do that check. With 2 of 3 owners (your wallet, the co-signer, a backup wallet), losing any one of them, or having one stolen, is not enough to move funds.
+      </p>
+
+      <div className="acct-form">
+        <div className="acct-field">
+          <span>Co-signer</span>
+          <div className="acct-toggle" role="radiogroup" aria-label="Co-signer">
+            <button type="button" role="radio" aria-checked={where === 'self'} className={where === 'self' ? 'is-active' : ''} onClick={() => setWhere('self')}>
+              On this machine
+            </button>
+            <button type="button" role="radio" aria-checked={where === 'hosted'} className={where === 'hosted' ? 'is-active' : ''} onClick={() => setWhere('hosted')}>
+              Hosted · server-trusted
+            </button>
+          </div>
+          <small>
+            {where === 'self' ? (
+              <>
+                Run <code>{COSIGNER_COMMAND}</code> from the Quantum Fork repository. It listens on 127.0.0.1 only and keeps its key in <code>~/.qfork-cosigner</code>.
+              </>
+            ) : (
+              'Run by Quantum Fork. You trust our server to check the post-quantum signatures before it approves.'
+            )}
+          </small>
+        </div>
+        {where === 'self' && (
+          <div className="acct-inline">
+            <input className="acct-input" value={url} onChange={(event) => setUrl(event.target.value)} spellCheck={false} aria-label="Co-signer address" />
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              disabled={info.state === 'loading'}
+              onClick={() => {
+                localStorage.setItem(COSIGNER_URL, url)
+                void check()
+              }}
+            >
+              {info.state === 'loading' ? 'Checking…' : 'Connect'}
+            </button>
+          </div>
+        )}
+        {info.state === 'error' && <p className="callout is-warn">{info.message}</p>}
+        {cosigner && (
+          <dl className="acct-kv">
+            <div>
+              <dt>Co-signer</dt>
+              <dd>
+                <Addr value={cosigner.address} label={shortAddress(cosigner.address, 6, 4)} /> · {cosigner.mode === 'hosted' ? 'hosted, server-trusted' : 'on this machine'}
+              </dd>
+            </div>
+            <div>
+              <dt>Gas</dt>
+              <dd>
+                {cosigner.balance === null ? 'unknown' : `${Number(formatEther(cosigner.balance)).toLocaleString(undefined, { maximumFractionDigits: 5 })} ETH`}
+                {cosigner.balance === 0n && cosigner.mode !== 'hosted' && ' · send it a little ETH so it can pay for approvals'}
+              </dd>
+            </div>
+          </dl>
+        )}
+        {cosigner && !cosignerOwns && isOwner && (
+          <div className="acct-actions">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={Boolean(tx.busy)}
+              onClick={() => void tx.run('Propose adding the co-signer', { to: account.address, data: proposeOwnerAction(account.address, { kind: 'addOwner', owner: cosigner.address, threshold: Math.min(Math.max(account.threshold, 2), account.owners.length + 1) }) })}
+            >
+              <Plus size={14} strokeWidth={1.8} /> Propose adding it as an owner
+            </button>
+            <span className="acct-note">
+              {account.owners.length === 1
+                ? 'Makes it 2 of 2. Then add a backup wallet as a third owner, so a lost wallet can be replaced with your recovery key.'
+                : account.threshold < 2
+                  ? `Raises approvals to 2 of ${account.owners.length + 1}, so nothing moves without the co-signer or a second wallet.`
+                  : `Keeps ${account.threshold} approvals, now of ${account.owners.length + 1} owners.`}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {cosigner && cosignerOwns && account.keyset === zeroHash && <p className="callout">Commit a post-quantum key set below first; the co-signer has nothing to check signatures against.</p>}
+      {cosigner && cosignerOwns && account.keyset !== zeroHash && (
+        <div className="acct-form">
+          {waiting.length === 0 ? (
+            <p className="muted">No open proposal is waiting for the co-signer.</p>
+          ) : (
+            <Field label="Proposal">
+              <select className="acct-input" value={proposal?.id.toString() ?? ''} onChange={(event) => setSelected(event.target.value)}>
+                {waiting.map((item) => (
+                  <option key={item.id.toString()} value={item.id.toString()}>
+                    #{item.id.toString()} · {cosignClass(account.address, item) === 'recovery' ? 'changes who controls the account' : describeProposal(account.address, item).kind === 'transfer' ? 'payment' : 'action'}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {proposal && (
+            <>
+              <div className="acct-proposal-preview">{describeCall(account.address, proposal, {})}</div>
+              <p className="acct-note">
+                {kind === 'authorize'
+                  ? 'Needs one signature from your ML-DSA daily key.'
+                  : `Changes owners, the threshold or the key set: needs ${needed ?? 'the recovery threshold of'} signature${needed === 1 ? '' : 's'} from your recovery key or guardians.`}
+              </p>
+              <div className="acct-field">
+                <span>Your key file</span>
+                <KeyFileInput label={keys ? 'Key file loaded · replace' : 'Load your key file'} onLoad={loadKeys} />
+                <small>{keyError ? <span className="acct-bad">{keyError}</span> : 'Read in this browser and signed here. The secret keys are never sent anywhere.'}</small>
+              </div>
+              {kind === 'recovery' && (
+                <Field label="Guardian signatures" hint="Each guardian opens this account page, uses “Sign as a guardian” below and sends you what it copies.">
+                  <textarea className="acct-input" rows={3} value={pasted} onChange={(event) => setPasted(event.target.value)} placeholder='{"publicKey":"0x…","signature":"0x…"}' spellCheck={false} />
+                </Field>
+              )}
+              <div className="acct-actions">
+                <button type="button" className="btn btn-primary btn-sm" disabled={!keys || Boolean(busy)} onClick={() => void send()}>
+                  <KeyRound size={14} strokeWidth={1.8} /> Sign and send to the co-signer
+                </button>
+              </div>
+            </>
+          )}
+          {busy && (
+            <p className="acct-pending" role="status">
+              <span className="pulse-dot" aria-hidden="true" /> {busy}
+            </p>
+          )}
+          {result?.ok === false && <p className="callout is-warn">{result.message}</p>}
+          {result?.ok && (
+            <p className="callout">
+              The co-signer approved it ({result.kind === 'recovery' ? 'recovery keys' : 'daily key'} checked).{' '}
+              <a href={baseExplorerTx(result.hash, ACCOUNT_NETWORK)} target="_blank" rel="noreferrer noopener">
+                View the approval <ArrowUpRight size={12} strokeWidth={1.8} />
+              </a>
+              {isOwner && ' Execute it from Proposals once it has enough approvals.'}
+            </p>
+          )}
+        </div>
+      )}
+      <Disclosure title="Guardian tools">
+        <GuardianTools account={account} />
+      </Disclosure>
+    </section>
+  )
+}
+
+function makeGuardianKey() {
+  const key = ml_dsa65.keygen()
+  const publicKey = toHex(key.publicKey)
+  const name = `qfork-guardian-${keccak256(publicKey).slice(2, 10)}`
+  download(`${name}.secret.json`, JSON.stringify({ format: 'qfork.guardian.v1', scheme: 'ml-dsa-65', publicKey, secretKey: toHex(key.secretKey), note: 'Guardian secret key. Generated in your browser and never sent anywhere. Keep it; use it only to sign recoveries you agree with.' }, null, 2))
+  download(`${name}.public.json`, JSON.stringify({ format: 'qfork.guardian.v1', scheme: 'ml-dsa-65', publicKey }, null, 2))
+  key.secretKey.fill(0)
+}
+
+/** For a guardian: make a key, or sign one of this account's proposals and hand the signature to an owner. */
+function GuardianTools({ account }: { account: AccountState }) {
+  const [made, setMade] = useState(false)
+  const [guardian, setGuardian] = useState<{ scheme: KeysetScheme; publicKey: Hex; secretKey: Hex } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [selected, setSelected] = useState('')
+  const [signature, setSignature] = useState<string | null>(null)
+  const open = account.proposals.filter((proposal) => !proposal.executed && !proposal.cancelled && cosignClass(account.address, proposal) === 'recovery')
+  const proposal = open.find((item) => item.id.toString() === selected) ?? open[0] ?? null
+  return (
+    <div className="acct-form">
+      <div className="acct-field">
+        <span>Become a guardian</span>
+        <div className="acct-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              makeGuardianKey()
+              setMade(true)
+            }}
+          >
+            <Download size={14} strokeWidth={1.8} /> Make a guardian key
+          </button>
+        </div>
+        <small>{made ? 'Two files were saved. Keep the .secret.json file; send the .public.json file to the account owner to add to their key set.' : 'Generates an ML-DSA-65 key in this browser.'}</small>
+      </div>
+      <div className="acct-field">
+        <span>Sign as a guardian</span>
+        <KeyFileInput
+          label={guardian ? 'Guardian key loaded · replace' : 'Load your guardian secret file'}
+          onLoad={(raw) => {
+            setError(null)
+            setSignature(null)
+            const file = raw as { secretKey?: unknown } | null
+            try {
+              const parsed = parseGuardianFile(raw)
+              if (!isKeyHex(file?.secretKey)) throw new Error('Load the .secret.json file; the public one cannot sign.')
+              setGuardian({ ...parsed, secretKey: file.secretKey })
+            } catch (caught) {
+              setError((caught as Error).message)
+            }
+          }}
+        />
+        {error && <small className="acct-bad">{error}</small>}
+      </div>
+      {guardian && (
+        <>
+          {open.length === 0 ? (
+            <p className="muted">There is no open recovery proposal on this account to sign.</p>
+          ) : (
+            <Field label="Recovery to sign">
+              <select className="acct-input" value={proposal?.id.toString() ?? ''} onChange={(event) => setSelected(event.target.value)}>
+                {open.map((item) => (
+                  <option key={item.id.toString()} value={item.id.toString()}>
+                    #{item.id.toString()}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {proposal && (
+            <>
+              <div className="acct-proposal-preview">{describeCall(account.address, proposal, {})}</div>
+              <div className="acct-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    const digest = digestOf(account, proposal)
+                    const signed = signCosign(guardian.scheme, hexToBytes(guardian.secretKey), digest)
+                    const text = JSON.stringify({ publicKey: guardian.publicKey, signature: signed, account: account.address, proposal: proposal.id.toString() })
+                    setSignature(text)
+                    void navigator.clipboard?.writeText(text).then(() => toast('Guardian signature copied. Send it to the account owner.'))
+                  }}
+                >
+                  <KeyRound size={14} strokeWidth={1.8} /> Sign #{proposal.id.toString()} and copy
+                </button>
+              </div>
+              <p className="acct-note">Only sign a recovery you have confirmed with the owner yourself. The signature covers exactly this proposal on this account.</p>
+              {signature && <textarea className="acct-input" rows={3} readOnly value={signature} onFocus={(event) => event.target.select()} aria-label="Guardian signature" />}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function Owners({ account, me, tx }: { account: AccountState; me: Hex | null; tx: Tx }) {
   const isOwner = account.owners.some((owner) => same(owner, me))
   return (
@@ -1095,6 +1607,7 @@ export function AccountConsole({ address }: { address: Hex }) {
           </Disclosure>
         </div>
       )}
+      <Cosigner account={account} reader={reader} isOwner={isOwner} tx={tx} onDone={refresh} />
       <Agents account={account} tokens={tokens} me={me} tx={tx} />
       <Owners account={account} me={me} tx={tx} />
       <Keyset account={account} isOwner={isOwner} tx={tx} />
@@ -1193,7 +1706,7 @@ function CreateAccount({ me, reader }: { me: Hex; reader: Reader }) {
             </button>
           </div>
           {withKeys && <KeysetMaker onReady={setCommitment} />}
-          <small>An ML-DSA-65 daily key and an SLH-DSA recovery key are generated in this browser. Only a hash of the public keys is stored on-chain.</small>
+          <small>An ML-DSA-65 daily key and an SLH-DSA recovery key are generated in this browser, plus any guardians’ public keys you add. Only a hash of the public keys is stored on-chain.</small>
         </div>
       </div>
       <TxStatus tx={tx} />
