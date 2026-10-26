@@ -21,7 +21,7 @@
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --display: 'Space Grotesk', 'Geist', ui-sans-serif, system-ui, sans-serif;
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --max: 1240px;

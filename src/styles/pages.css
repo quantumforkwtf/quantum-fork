@@ -50,10 +50,11 @@
 }
 
 .hero h1 {
+  font-family: var(--display);
   font-size: clamp(44px, 5.2vw, 78px);
-  font-weight: 450;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
 
@@ -61,12 +62,6 @@
   display: block;
   margin-top: 0.06em;
   color: var(--text);
-  font-family: var(--serif);
-  font-size: 1.08em;
-  font-style: italic;
-  font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: -0.015em;
 }
 
 .hero-sub {
