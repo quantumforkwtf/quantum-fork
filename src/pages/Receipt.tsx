@@ -86,7 +86,7 @@ export default function Receipt({ id }: { id: string }) {
             {formatBaseUnits(receipt.amountRaw, receipt.decimals)} <span>{isMainnetNetwork(network) ? 'QFORK' : 'TEST QFORK'}</span>
           </p>
           <p className="muted">
-            Destroyed with {onBase ? 'the token’s burn() function' : 'the SPL burn instruction'} on {receipt.network}. Read from the finalized transaction by the server, not reported by a browser. It registered {receipt.descendantId}.
+            {onBase ? 'Sent to the burn address 0x…dEaD' : 'Destroyed with the SPL burn instruction'} on {receipt.network}. Read from the finalized transaction by the server, not reported by a browser. It registered {receipt.descendantId}.
           </p>
         </header>
 

@@ -11,7 +11,7 @@ import { copyText } from '../lib/toast'
 import { shortAddress } from '../protocol/address'
 import { BURN_OPERATIONS, type BurnOperationSpec } from '../protocol/burnEngine'
 import { PQ_MODULES } from '../protocol/modules'
-import { baseExplorerAddress, type BaseNetwork, QFORK_MARKET } from '../protocol/base'
+import { BURN_ADDRESS, baseExplorerAddress, type BaseNetwork, QFORK_MARKET } from '../protocol/base'
 import { CHAIN_BURN_SCALE, formatBaseUnits, PRICING } from '../protocol/pricing'
 import { Link } from '../router'
 import { FinalWord } from './Home'
@@ -42,6 +42,7 @@ Build for the quantum future. No code required.
 Choose what to build: a chain, a vault, a payment network, a private network or an AI economy, and design it in the lab.
 
 $QFORK is the token of Quantum Fork, an ERC-20 on Base. It launched on ${QFORK_MARKET.launchpad} and trades on ${QFORK_MARKET.dex}.
+It is burned to register descendants: sent to 0x…dEaD, where it can never move again.
 Nothing here is a promise of returns.
 
 ${CLIENT_CONFIG.siteUrl}
@@ -97,7 +98,7 @@ export default function QFork() {
           <p className="token-sub">The fuel that launches a descendant.</p>
           <p className="section-lede">
             {live
-              ? `$QFORK is the token of Quantum Fork, an ERC-20 on Base. It launched on ${QFORK_MARKET.launchpad} and trades on ${QFORK_MARKET.dex}. Registering descendants with $QFORK is not open yet.`
+              ? `$QFORK is the token of Quantum Fork, an ERC-20 on Base. It launched on ${QFORK_MARKET.launchpad} and trades on ${QFORK_MARKET.dex}. It is burned to register descendants: sent to the burn address 0x…dEaD, where it can never move again.${registration === 'MAINNET' ? '' : ' Registration on Base is not open yet.'}`
               : '$QFORK is the token of Quantum Fork, an ERC-20 on Base.'}
           </p>
           <div className="hero-ctas">
@@ -215,8 +216,11 @@ export default function QFork() {
           <h2 id="terms-title">What $QFORK is, and isn’t.</h2>
           <ul className="notes">
             <li>The utility token of the Quantum Fork lab. Not equity, not a claim on revenue, not a promise of returns.</li>
-            <li>Registering descendants with $QFORK on Base is not open yet. The token contract has no burn() function, so the lab’s burn-based registration cannot use it as it stands.</li>
-            <li>Any registration payment is credited only after the server verifies it on-chain, in a finalized block on Base.</li>
+            <li>
+              A descendant is registered by burning $QFORK. The token has no burn() function, so a burn is a transfer to 0x000000000000000000000000000000000000dEaD, an address nobody holds a key for: the
+              tokens can never move again, but they still count in totalSupply().{registration === 'MAINNET' ? '' : ' Registration on Base is not open yet.'}
+            </li>
+            <li>A burn is credited only after the server verifies it on-chain, in a finalized block on Base.</li>
             <li>Post-quantum modules are designs, not shipped code. A descendant is post-quantum oriented, not quantum-proof.</li>
           </ul>
         </div>
@@ -240,6 +244,10 @@ export default function QFork() {
           <div>
             <dt>Trades on</dt>
             <dd>{live ? `${QFORK_MARKET.dex} · ${QFORK_MARKET.pair}` : 'Pending'}</dd>
+          </div>
+          <div>
+            <dt>Burn address</dt>
+            <dd>{shortAddress(BURN_ADDRESS, 6, 6)}</dd>
           </div>
         </dl>
       </section>

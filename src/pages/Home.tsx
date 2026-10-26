@@ -494,9 +494,8 @@ function BurnSection() {
           Burn QFORK. <span>Create the descendant.</span>
         </h2>
         <p className="section-lede">
-          {baseLive
-            ? 'Registration is designed around burning QFORK, verified on-chain by the server before anything is recorded. $QFORK is live on Base; registering with it is not open yet.'
-            : 'Every descendant is registered by burning QFORK, an ERC-20 on Base. The server verifies the burn on-chain before anything is recorded: supply goes down, and nothing is sent to a wallet.'}
+          Every descendant is registered by burning QFORK, an ERC-20 on Base: it is sent to the burn address 0x…dEaD, which nobody holds a key for, so it can never move again. The server verifies the burn on-chain
+          before anything is recorded.
         </p>
       </header>
       <ol ref={ref} className={`lifecycle ${seen ? 'is-seen' : ''}`}>

@@ -1,6 +1,6 @@
 import { encodeAbiParameters, encodeEventTopics, encodeFunctionData, type Hex, pad } from 'viem'
 import { describe, expect, it } from 'vitest'
-import { baseAvailability, burnCalldata, burnTag, ERC20_BURN_ABI, type EvmLog, type EvmReceipt, type EvmTx, resolveBaseConfig, verifyEvmBurn } from '../src/protocol/base'
+import { BURN_ADDRESS as DEAD, baseAvailability, burnCalldata, burnedInReceipt, burnTag, ERC20_BURN_ABI, type EvmLog, type EvmReceipt, type EvmTx, resolveBaseConfig, verifyEvmBurn } from '../src/protocol/base'
 import { burnMemo } from '../src/protocol/deployment'
 
 const TOKEN = '0x1111111111111111111111111111111111111111' as Hex
@@ -23,7 +23,7 @@ function burnTx(overrides: Partial<EvmTx> = {}): EvmTx {
   return { hash: pad('0x01', { size: 32 }), from: WALLET, to: TOKEN, input: burnCalldata(AMOUNT, TAG), value: 0n, chainId: 8453, ...overrides }
 }
 
-function receipt(logs: EvmLog[] = [transferLog(WALLET, ZERO, AMOUNT)], status: EvmReceipt['status'] = 'success'): EvmReceipt {
+function receipt(logs: EvmLog[] = [transferLog(WALLET, DEAD, AMOUNT)], status: EvmReceipt['status'] = 'success'): EvmReceipt {
   return { status, blockNumber: 123n, logs }
 }
 
@@ -43,11 +43,21 @@ describe('Base burn verification', () => {
     expect(verifyEvmBurn(burnTx({ to: OTHER }), receipt(), EXPECTED)).toMatchObject({ code: 'WRONG_CONTRACT' })
   })
 
-  it('rejects calls that are not a tagged burn', () => {
-    const transfer = encodeFunctionData({ abi: [{ type: 'function', name: 'transfer', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [], stateMutability: 'nonpayable' }], args: [ZERO, AMOUNT] })
-    expect(verifyEvmBurn(burnTx({ input: transfer }), receipt(), EXPECTED)).toMatchObject({ code: 'NOT_A_BURN' })
-    const untagged = encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'burn', args: [AMOUNT] })
+  it('builds transfer(0x…dEaD, amount) followed by the tag', () => {
+    expect(burnCalldata(AMOUNT, TAG)).toBe(`${encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'transfer', args: [DEAD, AMOUNT] })}${TAG.slice(2)}`)
+  })
+
+  it('rejects calls that are not a tagged transfer to the burn address', () => {
+    const untagged = encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'transfer', args: [DEAD, AMOUNT] })
     expect(verifyEvmBurn(burnTx({ input: untagged }), receipt(), EXPECTED)).toMatchObject({ code: 'NOT_A_BURN' })
+    for (const to of [ZERO, OTHER, WALLET]) {
+      const elsewhere = `${encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'transfer', args: [to, AMOUNT] })}${TAG.slice(2)}` as Hex
+      expect(verifyEvmBurn(burnTx({ input: elsewhere }), receipt([transferLog(WALLET, to, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'NOT_A_BURN' })
+    }
+    const burnFn = `${encodeFunctionData({ abi: [{ type: 'function', name: 'burn', inputs: [{ type: 'uint256' }], outputs: [], stateMutability: 'nonpayable' }], args: [AMOUNT] })}${TAG.slice(2)}` as Hex
+    expect(verifyEvmBurn(burnTx({ input: burnFn }), receipt([transferLog(WALLET, ZERO, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'NOT_A_BURN' })
+    const approve = `${encodeFunctionData({ abi: [{ type: 'function', name: 'approve', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [], stateMutability: 'nonpayable' }], args: [DEAD, AMOUNT] })}${TAG.slice(2)}` as Hex
+    expect(verifyEvmBurn(burnTx({ input: approve }), receipt(), EXPECTED)).toMatchObject({ code: 'NOT_A_BURN' })
   })
 
   it('rejects the wrong amount or another deployment’s tag', () => {
@@ -60,17 +70,24 @@ describe('Base burn verification', () => {
     expect(verifyEvmBurn(burnTx({ value: 1n }), receipt(), EXPECTED)).toMatchObject({ code: 'VALUE_SENT' })
   })
 
-  it('requires exactly one transfer to the zero address from the wallet', () => {
+  it('requires exactly one transfer of the amount from the wallet to the burn address', () => {
     expect(verifyEvmBurn(burnTx(), receipt([]), EXPECTED)).toMatchObject({ code: 'NO_BURN' })
-    expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, ZERO, AMOUNT), transferLog(WALLET, OTHER, 1n)]), EXPECTED)).toMatchObject({ code: 'MULTIPLE_BURNS' })
+    expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, DEAD, AMOUNT), transferLog(WALLET, OTHER, 1n)]), EXPECTED)).toMatchObject({ code: 'MULTIPLE_BURNS' })
     expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, OTHER, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
-    expect(verifyEvmBurn(burnTx(), receipt([transferLog(OTHER, ZERO, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
-    expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, ZERO, AMOUNT - 1n)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
+    expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, ZERO, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
+    expect(verifyEvmBurn(burnTx(), receipt([transferLog(OTHER, DEAD, AMOUNT)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
+    expect(verifyEvmBurn(burnTx(), receipt([transferLog(WALLET, DEAD, AMOUNT - 1n)]), EXPECTED)).toMatchObject({ code: 'BALANCE_MISMATCH' })
   })
 
   it('ignores transfer logs from other contracts', () => {
-    const logs = [transferLog(WALLET, OTHER, 5n, OTHER), transferLog(WALLET, ZERO, AMOUNT)]
+    const logs = [transferLog(WALLET, OTHER, 5n, OTHER), transferLog(WALLET, DEAD, AMOUNT)]
     expect(verifyEvmBurn(burnTx(), receipt(logs), EXPECTED)).toMatchObject({ ok: true })
+  })
+
+  it('notices tokens sent to the burn address even when verification fails', () => {
+    expect(burnedInReceipt(receipt([transferLog(WALLET, DEAD, 1n)]), TOKEN)).toBe(true)
+    expect(burnedInReceipt(receipt([transferLog(WALLET, ZERO, 1n)]), TOKEN)).toBe(false)
+    expect(burnedInReceipt(receipt([transferLog(WALLET, DEAD, 1n)], 'reverted'), TOKEN)).toBe(false)
   })
 })
 

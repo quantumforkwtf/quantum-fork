@@ -32,7 +32,7 @@ import { copyText, toast } from '../lib/toast'
 import { navigate, useLocation } from '../navigation'
 import { shortAddress } from '../protocol/address'
 import { ANCESTOR_NAME, ANCESTORS, type AncestorId, type CategoryCode, DEFAULT_ANCESTOR, isAncestorId, LOCUS_BY_CODE, MODELS } from '../protocol/ancestors'
-import { baseExplorerAddress, baseTier, type Chain } from '../protocol/base'
+import { BURN_ADDRESS, baseExplorerAddress, baseTier, type Chain } from '../protocol/base'
 import type { SolanaNetwork } from '../protocol/config'
 import { type DeploymentRecord, HAPPY_PATH, stateLabel } from '../protocol/deployment'
 import { applyProfile, defaultConfig, type DeploymentTier, type DescendantConfig, descendantSchema, ancestorGenome, genomeDiff, genomeHash, normalizeConfig, remainingExposure, TIERS } from '../protocol/descendant'
@@ -378,9 +378,9 @@ function ExactBaseTransaction({ prepared }: { prepared: PreparedBaseBurn }) {
       <p className="mono-label">Exact transaction · {request.network} · chain {request.chainId}</p>
       <ol className="tx-ix">
         <li className="is-key">
-          <code>QFORK.burn</code>
+          <code>QFORK.transfer</code>
           <span>
-            <b>burn(uint256)</b> · {formatNumber(request.amount)} QFORK ({prepared.amountRaw.toString()} base units, {prepared.decimals} decimals)
+            <b>transfer(address,uint256)</b> · {formatNumber(request.amount)} QFORK ({prepared.amountRaw.toString()} base units, {prepared.decimals} decimals) to the burn address
           </span>
           <dl>
             <div>
@@ -394,6 +394,15 @@ function ExactBaseTransaction({ prepared }: { prepared: PreparedBaseBurn }) {
             <div>
               <dt>From</dt>
               <dd>{shortAddress(request.owner, 6, 6)} (you)</dd>
+            </div>
+            <div>
+              <dt>To</dt>
+              <dd>
+                <a href={baseExplorerAddress(BURN_ADDRESS, request.network)} target="_blank" rel="noreferrer noopener">
+                  {shortAddress(BURN_ADDRESS, 6, 6)}
+                </a>{' '}
+                (burn address)
+              </dd>
             </div>
             <div>
               <dt>ETH sent</dt>
@@ -422,7 +431,7 @@ function ExactBaseTransaction({ prepared }: { prepared: PreparedBaseBurn }) {
           <dd className="is-ok">PASSED · {prepared.gas.toString()} gas</dd>
         </div>
       </dl>
-      <p className="tx-note">This calls the token’s own burn(): tokens are destroyed and total supply falls. Nothing is sent to any wallet. The server registers the descendant once the block is finalized on Base, usually 15–30 minutes.</p>
+      <p className="tx-note">This sends QFORK to 0x…dEaD, an address nobody holds a key for, so the tokens can never move again. They still count in the token’s total supply. The server registers the descendant once the block is finalized on Base, usually 15–30 minutes.</p>
     </div>
   )
 }
@@ -1158,7 +1167,7 @@ function LabBench() {
                 {chain === 'base' ? (
                   <p className="callout is-warn">
                     {baseStatus?.network === 'base'
-                      ? `BASE · Burns ${formatNumber(quote.total)} real $QFORK on Base with the token’s burn() function, permanently. The server verifies the burn once the block is finalized, then registers the descendant.`
+                      ? `BASE · Burns ${formatNumber(quote.total)} real $QFORK on Base by sending it to the burn address 0x…dEaD, permanently. The server verifies the burn once the block is finalized, then registers the descendant.`
                       : `BASE SEPOLIA · Burns ${formatNumber(quote.total)} test QFORK on Base Sepolia. Test tokens have no value. The server verifies the burn once the block is finalized.`}
                   </p>
                 ) : tier === 'testnet' ? (

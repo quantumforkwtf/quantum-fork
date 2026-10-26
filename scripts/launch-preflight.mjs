@@ -13,7 +13,8 @@ const CLANKER_FACTORY = '0xE85A59c628F7d27878ACeB4bf3b35733630083a9'
 const POOL_MANAGER = '0x498581fF718922c3f8e6A244956aF099B2652b2b'
 const CLANKER_SUPPLY_RAW = 100_000_000_000n * 10n ** 18n
 const FACTORY_ABI = parseAbi(['function tokenDeploymentInfo(address token) view returns ((address token, address hook, address locker, address[] extensions))'])
-const BURN_ABI = parseAbi(['function burn(uint256 value)'])
+const BURN_ABI = parseAbi(['function transfer(address to, uint256 value) returns (bool)'])
+const BURN_ADDRESS = '0x000000000000000000000000000000000000dEaD'
 
 const args = process.argv.slice(2)
 const option = (name) => {
@@ -66,7 +67,7 @@ await check('Contract exists', async () => {
 
 await check('Created by Clanker v4', async () => {
   const info = await client.readContract({ address: CLANKER_FACTORY, abi: FACTORY_ABI, functionName: 'tokenDeploymentInfo', args: [token] })
-  if (getAddress(info.token) !== token) return fail('Created by Clanker v4', 'the Clanker v4 factory has no record of this token')
+  if (getAddress(info.token) !== token) return warn('Created by Clanker v4', 'no: the Clanker v4 factory has no record of this token ($QFORK launched on o1)')
   clanker = true
   pass('Created by Clanker v4', `locker ${info.locker}`)
 })
@@ -76,7 +77,7 @@ await check('Name, symbol, decimals', async () => {
     ['name', 'symbol', 'decimals'].map((functionName) => client.readContract({ address: token, abi: erc20Abi, functionName })),
   )
   if (decimals !== 18) return fail('Name, symbol, decimals', `decimals ${decimals}, the server expects 18`)
-  if (symbol !== symbolWanted) return fail('Name, symbol, decimals', `symbol is "${symbol}" (${name}), expected "${symbolWanted}"`)
+  if (symbol.toUpperCase() !== symbolWanted.toUpperCase()) return fail('Name, symbol, decimals', `symbol is "${symbol}" (${name}), expected "${symbolWanted}"`)
   pass('Name, symbol, decimals', `${name} ($${symbol}), 18 decimals`)
 })
 
@@ -89,13 +90,12 @@ await check('Total supply', async () => {
 })
 
 await check('Tagged burn accepted', async () => {
-  if (!clanker) return warn('Tagged burn accepted', 'skipped: not a Clanker v4 token')
   const held = await client.readContract({ address: token, abi: erc20Abi, functionName: 'balanceOf', args: [POOL_MANAGER] })
   if (held === 0n) return warn('Tagged burn accepted', 'skipped: the Uniswap v4 pool holds none of this token to simulate with')
   const tag = toHex(crypto.getRandomValues(new Uint8Array(32)))
-  const data = concatHex([encodeFunctionData({ abi: BURN_ABI, functionName: 'burn', args: [1n] }), tag])
+  const data = concatHex([encodeFunctionData({ abi: BURN_ABI, functionName: 'transfer', args: [BURN_ADDRESS, 1n] }), tag])
   await client.call({ account: POOL_MANAGER, to: token, data })
-  pass('Tagged burn accepted', 'burn(uint256) with a 32-byte registration tag simulates cleanly')
+  pass('Tagged burn accepted', 'transfer to 0x…dEaD with a 32-byte registration tag simulates cleanly')
 })
 
 const env = [

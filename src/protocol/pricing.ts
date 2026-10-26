@@ -27,10 +27,10 @@ export interface BurnQuote {
 }
 
 /**
- * Burn multiplier per chain. The Base token has 100B supply against ~1B on
- * Solana, so Base amounts are 100x larger to burn the same share of supply.
+ * Burn multiplier per chain. $QFORK on Base has 1B supply; at 10x a registration
+ * base burns 1,000,000 QFORK, 0.1% of supply.
  */
-export const CHAIN_BURN_SCALE: Record<Chain, number> = { solana: 1, base: 100 }
+export const CHAIN_BURN_SCALE: Record<Chain, number> = { solana: 1, base: 10 }
 
 export function quoteGenesis(config: DescendantConfig, purpose: BurnQuote['purpose'] = 'GENESIS', chain: Chain = 'solana'): BurnQuote {
   const scale = CHAIN_BURN_SCALE[chain]

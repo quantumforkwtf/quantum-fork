@@ -476,7 +476,7 @@ export function Footer() {
           <div className="footer-copy">
             <p>
               {baseLive
-                ? `$QFORK is live on Base: launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Registering descendants with $QFORK is not open yet. Descendant tokens are real Clanker tokens on Base. No chain runs a descendant yet.`
+                ? `$QFORK is live on Base: launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Descendants are registered by burning $QFORK to 0x…dEaD, verified on-chain by the server${base?.registration.available ? '' : '; registration is not open yet'}. Descendant tokens are real Clanker tokens on Base. No chain runs a descendant yet.`
                 : NET.mainnet
                   ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet.'
                   : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}

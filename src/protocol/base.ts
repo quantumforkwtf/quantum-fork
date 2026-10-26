@@ -9,7 +9,7 @@ export const BASE_PUBLIC_RPC: Record<BaseNetwork, string> = { base: 'https://mai
 export const BASE_EXPLORER: Record<BaseNetwork, string> = { base: 'https://basescan.org', 'base-sepolia': 'https://sepolia.basescan.org' }
 
 export const ERC20_BURN_ABI = parseAbi([
-  'function burn(uint256 value)',
+  'function transfer(address to, uint256 value) returns (bool)',
   'function balanceOf(address owner) view returns (uint256)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
@@ -20,9 +20,13 @@ export const ERC20_BURN_ABI = parseAbi([
 /** Where $QFORK launched and trades. Its contract has no burn() function. */
 export const QFORK_MARKET = { launchpad: 'o1', dex: 'Uniswap v4', pair: 'QFORK/ETH' } as const
 
-const ZERO = '0x0000000000000000000000000000000000000000'
-/** burn(uint256) selector + one 32-byte argument + the 32-byte deployment tag. */
-const BURN_CALLDATA_BYTES = 4 + 32 + 32
+/**
+ * Burns are transfers to this address. Nobody holds its key, so tokens sent here can never move
+ * again, but they still count in the token's totalSupply().
+ */
+export const BURN_ADDRESS: Hex = '0x000000000000000000000000000000000000dEaD'
+/** transfer(address,uint256) selector + two 32-byte arguments + the 32-byte deployment tag. */
+const BURN_CALLDATA_BYTES = 4 + 32 + 32 + 32
 
 export interface BaseConfig {
   network: BaseNetwork
@@ -126,9 +130,9 @@ export function burnTag(memo: string): Hex {
   return keccak256(toBytes(memo))
 }
 
-/** Calldata for `burn(amount)` with the deployment tag appended. Solidity ignores the trailing bytes. */
+/** Calldata for `transfer(BURN_ADDRESS, amount)` with the deployment tag appended. Solidity ignores the trailing bytes. */
 export function burnCalldata(amountRaw: bigint, tag: Hex): Hex {
-  return concat([encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'burn', args: [amountRaw] }), tag])
+  return concat([encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'transfer', args: [BURN_ADDRESS, amountRaw] }), tag])
 }
 
 export interface EvmTx {
@@ -182,8 +186,8 @@ const same = (a: string | null | undefined, b: string | null | undefined) => !!a
 
 /**
  * Verifies a Base burn from the transaction and its receipt. Finality is the caller's job.
- * Only a direct call from the wallet to `token.burn(amount)` with the deployment tag is accepted,
- * and the receipt must show exactly that amount leaving the wallet to the zero address.
+ * Only a direct call from the wallet to `token.transfer(BURN_ADDRESS, amount)` with the deployment
+ * tag is accepted, and the receipt must show exactly that amount leaving the wallet to BURN_ADDRESS.
  */
 export function verifyEvmBurn(tx: EvmTx | null, receipt: EvmReceipt | null, expected: EvmBurnExpectation): EvmBurnVerification {
   if (!tx || !receipt) return fail('TX_NOT_FOUND', 'The transaction was not found.')
@@ -193,11 +197,12 @@ export function verifyEvmBurn(tx: EvmTx | null, receipt: EvmReceipt | null, expe
   if (tx.value !== 0n) return fail('VALUE_SENT', 'A burn must not send ETH.')
 
   const input = tx.input.toLowerCase() as Hex
-  const selector = encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'burn', args: [0n] }).slice(0, 10)
-  if (!input.startsWith(selector) || (input.length - 2) / 2 !== BURN_CALLDATA_BYTES) return fail('NOT_A_BURN', 'The transaction is not a tagged burn(amount) call.')
-  const amount = BigInt(`0x${input.slice(10, 74)}`)
+  const selector = encodeFunctionData({ abi: ERC20_BURN_ABI, functionName: 'transfer', args: [BURN_ADDRESS, 0n] }).slice(0, 10)
+  if (!input.startsWith(selector) || (input.length - 2) / 2 !== BURN_CALLDATA_BYTES) return fail('NOT_A_BURN', 'The transaction is not a tagged transfer to the burn address.')
+  if (input.slice(10, 74) !== BURN_ADDRESS.slice(2).toLowerCase().padStart(64, '0')) return fail('NOT_A_BURN', 'The transfer does not go to the burn address.')
+  const amount = BigInt(`0x${input.slice(74, 138)}`)
   if (amount !== expected.amountRaw) return fail('WRONG_AMOUNT', 'The burned amount does not match the required amount.')
-  if (`0x${input.slice(74)}` !== expected.tag.toLowerCase()) return fail('TAG_MISMATCH', 'The burn is not tagged for this deployment.')
+  if (`0x${input.slice(138)}` !== expected.tag.toLowerCase()) return fail('TAG_MISMATCH', 'The burn is not tagged for this deployment.')
 
   const transfers = receipt.logs
     .filter((log) => same(log.address, expected.token))
@@ -212,20 +217,20 @@ export function verifyEvmBurn(tx: EvmTx | null, receipt: EvmReceipt | null, expe
   if (transfers.length === 0) return fail('NO_BURN', 'The receipt shows no QFORK transfer.')
   if (transfers.length > 1) return fail('MULTIPLE_BURNS', 'Exactly one QFORK transfer is allowed in a burn transaction.')
   const [transfer] = transfers
-  if (!same(transfer.from, tx.from) || !same(transfer.to, ZERO) || transfer.value !== expected.amountRaw) {
-    return fail('BALANCE_MISMATCH', 'The receipt does not show the burned amount leaving the wallet to the zero address.')
+  if (!same(transfer.from, tx.from) || !same(transfer.to, BURN_ADDRESS) || transfer.value !== expected.amountRaw) {
+    return fail('BALANCE_MISMATCH', 'The receipt does not show the burned amount leaving the wallet to the burn address.')
   }
   return { ok: true, wallet: getAddress(tx.from), blockNumber: receipt.blockNumber }
 }
 
-/** Whether the receipt shows any of the token being sent to the zero address, whatever else went wrong. */
+/** Whether the receipt shows any of the token being sent to the burn address, whatever else went wrong. */
 export function burnedInReceipt(receipt: EvmReceipt | null, token: Hex): boolean {
   if (!receipt || receipt.status !== 'success') return false
   return receipt.logs.some((log) => {
     if (!same(log.address, token)) return false
     try {
       const event = decodeEventLog({ abi: ERC20_BURN_ABI, eventName: 'Transfer', topics: log.topics as [Hex, ...Hex[]], data: log.data })
-      return same(event.args.to, ZERO)
+      return same(event.args.to, BURN_ADDRESS)
     } catch {
       return false
     }

@@ -7,23 +7,25 @@ import { serverEnv } from '../api/_lib/env'
 import type { Context } from '../api/_lib/http'
 import { createLogger } from '../api/_lib/log'
 import { keys, memoryStore, type Store } from '../api/_lib/store'
-import { burnCalldata, burnTag } from '../src/protocol/base'
+import { BURN_ADDRESS, burnCalldata, burnTag } from '../src/protocol/base'
 import { CLANKER_FACTORY, CLANKER_SUPPLY_RAW } from '../src/protocol/clanker'
 import { defaultConfig } from '../src/protocol/descendant'
 import { toBaseUnits } from '../src/protocol/pricing'
 
 /**
- * Launch rehearsal: the real registration pipeline against a fork of Base mainnet and a real
- * Clanker v4 token, in place of $QFORK. Skips when Anvil or the Base RPC is unavailable.
+ * Launch rehearsal: the real registration pipeline against a fork of Base mainnet and the real
+ * $QFORK token. Skips when Anvil or the Base RPC is unavailable.
  */
 const hasAnvil = spawnSync('anvil', ['--version']).status === 0
 const SOURCE = 'https://mainnet.base.org'
-/** FOXHARD, a Clanker v4 token created at Base block 53,074,351. */
-const TOKEN = getAddress('0xe15df067ba39c833cabca188ccf7bbbe081ca2e4')
-/** Uniswap v4 PoolManager on Base: holds nearly all of a fresh Clanker token's supply. */
+/** $QFORK on Base, launched on o1. It has no burn(), so burns go to BURN_ADDRESS. */
+const TOKEN = getAddress('0x183439fe5442bab6df9d3174baee70da900e6301')
+const QFORK_SUPPLY_RAW = 10n ** 27n
+/** Uniswap v4 PoolManager on Base: holds the pool's $QFORK. */
 const BURNER = getAddress('0x498581fF718922c3f8e6A244956aF099B2652b2b')
 const PORT = 18741
 const TOTAL_SUPPLY = '0x18160ddd'
+const balanceOf = (owner: Hex) => `0x70a08231${owner.slice(2).toLowerCase().padStart(64, '0')}`
 
 let node: ChildProcess | null = null
 let url = ''
@@ -94,11 +96,12 @@ function goLive() {
 }
 
 describe('Base mainnet launch rehearsal (fork)', () => {
-  it('registers a mainnet descendant from a real Clanker v4 burn, once finalized', async (test) => {
+  it('registers a mainnet descendant from a real $QFORK burn to 0x…dEaD, once finalized', async (test) => {
     if (!url) return test.skip()
     goLive()
-    const supplyBefore = BigInt((await call(url, 'eth_call', [{ to: TOKEN, data: TOTAL_SUPPLY }, 'latest'])) as Hex)
-    expect(supplyBefore).toBe(CLANKER_SUPPLY_RAW)
+    const read = async (data: string) => BigInt((await call(url, 'eth_call', [{ to: TOKEN, data }, 'latest'])) as Hex)
+    expect(await read(TOTAL_SUPPLY)).toBe(QFORK_SUPPLY_RAW)
+    const deadBefore = await read(balanceOf(BURN_ADDRESS))
 
     const { deployment } = await createDeployment(context(), { ...defaultConfig(), tier: 'mainnet' }, 'launch-rehearsal-key-1', 'base')
     expect(deployment.burn).toMatchObject({ chain: 'base', network: 'base', mint: TOKEN })
@@ -109,8 +112,8 @@ describe('Base mainnet launch rehearsal (fork)', () => {
     const hash = (await call(url, 'eth_sendTransaction', [{ from: BURNER, to: TOKEN, data: burnCalldata(amountRaw, burnTag(deployment.burn.memo)) }])) as Hex
     const mined = await receipt(hash)
     expect(mined.status).toBe('0x1')
-    const supplyAfter = BigInt((await call(url, 'eth_call', [{ to: TOKEN, data: TOTAL_SUPPLY }, 'latest'])) as Hex)
-    expect(supplyBefore - supplyAfter).toBe(amountRaw)
+    expect((await read(balanceOf(BURN_ADDRESS))) - deadBefore).toBe(amountRaw)
+    expect(await read(TOTAL_SUPPLY)).toBe(QFORK_SUPPLY_RAW)
 
     expect((await submitBurn(context(), deployment.id, hash)).status).toBe('PENDING')
     await call(url, 'anvil_mine', ['0x80'])
@@ -150,6 +153,6 @@ describe('Base mainnet launch rehearsal (fork)', () => {
     const { GET } = await import('../api/token')
     const body = (await (await GET(new Request('http://test.local/api/token'))).json()) as { base: Record<string, unknown> }
     expect(body.base).toMatchObject({ status: 'LIVE', network: 'base', token: TOKEN, decimals: 18, error: null })
-    expect(BigInt(body.base.supplyRaw as string)).toBeLessThanOrEqual(CLANKER_SUPPLY_RAW)
+    expect(BigInt(body.base.supplyRaw as string)).toBe(QFORK_SUPPLY_RAW)
   }, 30_000)
 })

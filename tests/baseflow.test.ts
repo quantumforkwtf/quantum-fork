@@ -6,7 +6,7 @@ import { type Context, HttpError } from '../api/_lib/http'
 import { createLogger } from '../api/_lib/log'
 import { keys, memoryStore, type Store } from '../api/_lib/store'
 import { prepareClanker, verifyClanker } from '../api/_lib/tokens'
-import { burnCalldata, burnTag, ERC20_BURN_ABI } from '../src/protocol/base'
+import { BURN_ADDRESS, burnCalldata, burnTag, ERC20_BURN_ABI } from '../src/protocol/base'
 import { CLANKER_EVENTS, CLANKER_FACTORY, CLANKER_SUPPLY_RAW } from '../src/protocol/clanker'
 import { defaultConfig } from '../src/protocol/descendant'
 import { quoteGenesis, toBaseUnits } from '../src/protocol/pricing'
@@ -121,9 +121,10 @@ describe('Base deployment + burn pipeline', () => {
     expect(created.burn).toMatchObject({ chain: 'base', mint: TOKEN, network: 'base-sepolia', signature: null })
   })
 
-  it('requires 100x the Solana amount on Base, matching the 100x supply', async () => {
+  it('requires 10x the Solana amount on Base: 1,000,000 QFORK base, 0.1% of the 1B supply', async () => {
     const { deployment: created } = await deployment()
-    expect(created.burn.required).toBe(quoteGenesis(testnet()).total * 100)
+    expect(quoteGenesis({ ...testnet(), modules: [] }, 'GENESIS', 'base').total).toBe(1_000_000)
+    expect(created.burn.required).toBe(quoteGenesis(testnet()).total * 10)
     expect(created.burn.required).toBe(quoteGenesis(testnet(), 'GENESIS', 'base').total)
   })
 
@@ -136,7 +137,7 @@ describe('Base deployment + burn pipeline', () => {
 
   it('stays pending until the block is finalized, then registers once', async () => {
     const { deployment: created, amountRaw, tag } = await deployment()
-    chain.txs.set(hash(1), { input: burnCalldata(amountRaw, tag), block: 150n, logs: [{ from: WALLET, to: ZERO, value: amountRaw }] })
+    chain.txs.set(hash(1), { input: burnCalldata(amountRaw, tag), block: 150n, logs: [{ from: WALLET, to: BURN_ADDRESS, value: amountRaw }] })
     expect((await submitBurn(context(), created.id, hash(1))).status).toBe('PENDING')
     chain.finalized = 150n
     const outcome = await submitBurn(context(), created.id, hash(1))
@@ -155,7 +156,7 @@ describe('Base deployment + burn pipeline', () => {
 
   it('rejects another deployment’s tag and reports the tokens as burned', async () => {
     const { deployment: created, amountRaw } = await deployment()
-    chain.txs.set(hash(2), { input: burnCalldata(amountRaw, burnTag('qfork:v1:genesis:dep_zzzzzzzzzzzzzzzz')), logs: [{ from: WALLET, to: ZERO, value: amountRaw }] })
+    chain.txs.set(hash(2), { input: burnCalldata(amountRaw, burnTag('qfork:v1:genesis:dep_zzzzzzzzzzzzzzzz')), logs: [{ from: WALLET, to: BURN_ADDRESS, value: amountRaw }] })
     const outcome = await submitBurn(context(), created.id, hash(2))
     expect(outcome).toMatchObject({ status: 'FAILED', code: 'TAG_MISMATCH', tokensBurned: true })
   })
@@ -164,13 +165,13 @@ describe('Base deployment + burn pipeline', () => {
     const { deployment: created, amountRaw, tag } = await deployment()
     chain.txs.set(hash(3), { input: burnCalldata(amountRaw, tag), status: 'reverted' })
     expect(await submitBurn(context(), created.id, hash(3))).toMatchObject({ status: 'FAILED', code: 'TX_FAILED', tokensBurned: false })
-    chain.txs.set(hash(4), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: ZERO, value: amountRaw }] })
+    chain.txs.set(hash(4), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: BURN_ADDRESS, value: amountRaw }] })
     expect((await submitBurn(context(), created.id, hash(4))).status).toBe('VERIFIED')
   })
 
   it('never binds one transaction to two deployments', async () => {
     const { deployment: first, amountRaw, tag } = await deployment()
-    chain.txs.set(hash(5), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: ZERO, value: amountRaw }] })
+    chain.txs.set(hash(5), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: BURN_ADDRESS, value: amountRaw }] })
     expect((await submitBurn(context(), first.id, hash(5))).status).toBe('VERIFIED')
     const { deployment: second } = await createDeployment(context(), testnet(), 'base-idempotency-key-9', 'base')
     await expect(submitBurn(context(), second.id, hash(5))).rejects.toMatchObject({ code: 'SIGNATURE_USED' })
@@ -207,7 +208,7 @@ describe('Clanker descendant launch on Base', () => {
   async function registered() {
     vi.stubEnv('ENABLE_CLANKER_LAUNCH', 'true')
     const { deployment: created, amountRaw, tag } = await deployment()
-    chain.txs.set(hash(1), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: ZERO, value: amountRaw }] })
+    chain.txs.set(hash(1), { input: burnCalldata(amountRaw, tag), logs: [{ from: WALLET, to: BURN_ADDRESS, value: amountRaw }] })
     expect((await submitBurn(context(), created.id, hash(1))).status).toBe('VERIFIED')
     return created
   }

@@ -17,7 +17,7 @@ const THREATS: { threat: string; impact: string; mitigation: string; status: 'MI
   {
     threat: 'A client claims a burn that never happened',
     impact: 'Deployment granted for free',
-    mitigation: 'The server ignores client-reported amounts, wallets and success. It reads the transaction and receipt from its own Base RPC, waits for a finalized block, and checks the token contract, the burn() call, amount, tag and sender.',
+    mitigation: 'The server ignores client-reported amounts, wallets and success. It reads the transaction and receipt from its own Base RPC, waits for a finalized block, and checks the token contract, the transfer to the burn address, amount, tag and sender.',
     status: 'MITIGATED',
   },
   {
@@ -27,9 +27,9 @@ const THREATS: { threat: string; impact: string; mitigation: string; status: 'MI
     status: 'MITIGATED',
   },
   {
-    threat: 'A transfer to a “dead” wallet is presented as a burn',
-    impact: 'Supply not reduced; tokens recoverable',
-    mitigation: 'Only a direct burn() call is accepted, and the receipt must show exactly one Transfer of that amount to the zero address. Transfers to any wallet fail verification.',
+    threat: 'A transfer to a wallet someone controls is presented as a burn',
+    impact: 'Tokens recoverable; burn not real',
+    mitigation: '$QFORK has no burn() function, so a burn is a direct transfer to 0x000000000000000000000000000000000000dEaD, an address nobody holds a key for. The receipt must show exactly one Transfer of that amount from the wallet to that address; transfers anywhere else fail verification. Burned tokens can never move again, but they still count in totalSupply().',
     status: 'MITIGATED',
   },
   {
