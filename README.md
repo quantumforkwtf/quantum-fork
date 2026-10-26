@@ -5,7 +5,7 @@
 <br/><br/>
 
 <a href="https://quantumfork.wtf"><img src="https://img.shields.io/badge/quantumfork.wtf-open_the_lab-c8ff4d?style=for-the-badge&labelColor=0b0c0e" alt="quantumfork.wtf"></a>
-<a href="https://x.com/QuantumForkwtf"><img src="https://img.shields.io/badge/@QuantumForkwtf-follow-eceae4?style=for-the-badge&logo=x&logoColor=eceae4&labelColor=0b0c0e" alt="Follow on X"></a>
+<a href="https://x.com/quantumforkk"><img src="https://img.shields.io/badge/@quantumforkk-follow-eceae4?style=for-the-badge&logo=x&logoColor=eceae4&labelColor=0b0c0e" alt="Follow on X"></a>
 
 <img src="https://img.shields.io/badge/Base-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Base">
 <img src="https://img.shields.io/badge/Anvil_·_Foundry-1b1b1b?style=flat-square&logo=ethereum&logoColor=white" alt="Foundry">
@@ -323,6 +323,6 @@ Configuration lives in [`.env.example`](./.env.example). Deep dives:
 
 **FORK REALITY. BUILD THE NEXT BLOCKCHAIN.**
 
-<a href="https://quantumfork.wtf">quantumfork.wtf</a> · <a href="https://x.com/QuantumForkwtf">@QuantumForkwtf</a>
+<a href="https://quantumfork.wtf">quantumfork.wtf</a> · <a href="https://x.com/quantumforkk">@quantumforkk</a>
 
 </div>

@@ -11,7 +11,7 @@ const resolved = resolveConfig(import.meta.env as Record<string, string | boolea
 
 export const CLIENT_CONFIG = resolved.config
 export const CLIENT_CONFIG_ISSUES = resolved.issues
-export const X_HANDLE = 'QuantumForkwtf'
+export const X_HANDLE = 'quantumforkk'
 export const X_URL = `https://x.com/${X_HANDLE}`
 export const GITHUB_REPO = 'quantumforkwtf/quantum-fork'
 export const GITHUB_URL = `https://github.com/${GITHUB_REPO}`
