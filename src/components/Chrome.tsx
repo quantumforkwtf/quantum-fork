@@ -140,22 +140,20 @@ function SoundToggle() {
 /** What the site can actually do right now, according to the server. */
 function ModeChip() {
   const server = useServerStatus()
-  let label = 'CONNECTING'
-  let title = 'Checking the protocol server.'
+  let label: string
+  let title: string
   let live = false
   if (server.state === 'ok') {
     const base = server.status.base
-    if (base?.registration.available) {
-      label = base.network === 'base' ? 'MAINNET' : 'BASE SEPOLIA'
-      title = base.network === 'base' ? 'Registration burns real $QFORK on Base, verified on-chain by the server.' : 'Registration burns test QFORK on Base Sepolia, verified on-chain by the server. Test tokens have no value.'
-      live = true
-    } else {
-      label = 'READ-ONLY'
-      title = base?.registration.reason ?? 'Registration opens when $QFORK launches on Base.'
-    }
+    if (!base?.registration.available) return null
+    label = base.network === 'base' ? 'MAINNET' : 'BASE SEPOLIA'
+    title = base.network === 'base' ? 'Registration burns real $QFORK on Base, verified on-chain by the server.' : 'Registration burns test QFORK on Base Sepolia, verified on-chain by the server. Test tokens have no value.'
+    live = true
   } else if (server.state === 'offline') {
     label = 'OFFLINE'
     title = 'Protocol server unreachable. Designing works; registering and launching tokens do not.'
+  } else {
+    return null
   }
   return (
     <span className={`status-chip ${live ? 'is-live' : ''}`} title={title}>
