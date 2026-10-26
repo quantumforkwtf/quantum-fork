@@ -98,7 +98,7 @@ describe('compileBlueprint', () => {
     expect(vaultStatus).not.toBe('RESEARCH')
     expect(STATUS_RANK[vaultStatus]).toBeLessThanOrEqual(STATUS_RANK[ACCOUNT_STATUS])
     expect(compileBlueprint(bp('quantum-ai-economy')).status).toBe('RESEARCH')
-    expect(compileBlueprint(bp('enterprise-quantum-network')).status).toBe('COMING SOON')
+    expect(compileBlueprint(bp('enterprise-quantum-network')).status).toBe('RESEARCH')
     expect(compileBlueprint(bp('quantumize-my-app')).status).toBe('AVAILABLE')
     expect(compileBlueprint(bp('quantumize-my-app'), { kind: 'wallet', signin: 'tokens', longevity: 'yes' }).status).toBe('AVAILABLE')
     expect(compileBlueprint(bp('quantumize-my-chain')).status).toBe('AVAILABLE')
@@ -118,8 +118,8 @@ describe('compileBlueprint', () => {
     expect(compileBlueprint(bp('quantum-chain'), {}, { devnetBurn: true }).plan.tiers.testnet.available).toBe(true)
 
     const enterprise = compileBlueprint(bp('enterprise-quantum-network'), {}, { devnetBurn: true })
-    expect(enterprise.plan.action.kind).toBe('design')
-    expect(enterprise.plan.tiers.testnet.available).toBe(false)
+    expect(enterprise.plan.action.kind).toBe('build')
+    expect(enterprise.plan.tiers.testnet.available).toBe(true)
     expect(compileBlueprint(bp('quantum-ai-economy'), {}, { devnetBurn: true }).plan.tiers.testnet.available).toBe(true)
 
     expect(compileBlueprint(bp('quantum-vault')).plan.action.kind).toBe('design')
@@ -166,8 +166,12 @@ describe('compileBlueprint', () => {
     expect(vault.warnings.some((item) => /is not built/.test(item.message))).toBe(false)
 
     const enterprise = compileBlueprint(bp('enterprise-quantum-network'))
-    expect(enterprise.status).toBe('COMING SOON')
-    expect(enterprise.warnings.some((item) => /VALIDATOR PERMISSIONING is not built/.test(item.message))).toBe(true)
+    expect(enterprise.status).toBe('RESEARCH')
+    expect(enterprise.warnings.some((item) => /is not built/.test(item.message))).toBe(false)
+    expect(COMPONENT_BY_ID.permissioning).toMatchObject({ status: 'EXPERIMENTAL' })
+    expect(COMPONENT_BY_ID.permissioning.implementation).toMatch(/vote/)
+    expect(COMPONENT_BY_ID.permissioning.implementation).toMatch(/classical secp256k1/)
+    expect(enterprise.blueprint.limitations.join(' ')).toMatch(/post-quantum modules are not part of it/)
   })
 
   it('labels the account components by where QForkAccount actually runs', () => {
@@ -204,13 +208,18 @@ describe('compileBlueprint', () => {
     expect(blueprintLabHref(bp('quantum-chain'), answers)).toBe('/lab?blueprint=quantum-chain&a=coverage%3Abroad%2Cscale%3Asmall%2Caccess%3Aprivate')
   })
 
-  it('ends at registration and never shows a running chain', () => {
+  it('ends at registration, with a chain only operators run', () => {
     const steps = compileBlueprint(bp('quantum-chain'), {}, { devnetBurn: true }).plan.steps
     expect(steps.find((step) => step.label === 'QFORK burn')?.state).toBe('DEVNET')
     expect(steps.find((step) => step.label === 'Descendant registered')?.state).toBe('DEVNET')
-    expect(steps.find((step) => step.label === 'Running chain')?.state).toBe('UNAVAILABLE')
+    const running = steps.find((step) => step.label === 'Running chain')
+    expect(running?.state).toBe('AVAILABLE')
+    expect(running?.detail).toMatch(/operators run it/)
+    expect(running?.detail).toMatch(/classical keys/)
     const offline = compileBlueprint(bp('quantum-chain')).plan.steps
     expect(offline.find((step) => step.label === 'QFORK burn')?.state).toBe('UNAVAILABLE')
+    expect(offline.find((step) => step.label === 'Running chain')?.state).toBe('UNAVAILABLE')
+    expect(compileBlueprint(bp('quantum-chain'), {}, { devnetBurn: true }, 'solana').plan.steps.find((step) => step.label === 'Running chain')?.state).toBe('UNAVAILABLE')
     for (const blueprint of BLUEPRINTS) for (const step of compileBlueprint(blueprint, {}, { devnetBurn: true }).plan.steps) expect(step.detail).not.toMatch(/simulat/i)
   })
 })

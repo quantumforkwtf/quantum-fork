@@ -228,6 +228,38 @@ the origins you allow. A hosted co-signer (`/api/cosign`) runs the same checks w
 Either way the co-signer is **server-trusted**: Base only sees its ordinary ECDSA approval, so the
 post-quantum check is as strong as the machine running it. Base itself stays classical.
 
+## 10 · Descendant networks
+
+> **A descendant registered on Base runs as its own chain, on machines its operators run.** `/network/<id>/nodes`
+
+Each network is [Hyperledger Besu](https://github.com/besu-eth/besu) with **QBFT** consensus: a fixed
+set of validators take turns proposing blocks, and every block needs ⌈2n/3⌉ of their signatures, so 4
+validators keep finalizing with one down. Quantum Fork never runs or relays nodes. It keeps a
+directory of what operators sign:
+
+| Step | Who | What is signed |
+| --- | --- | --- |
+| List a node | Operator | The listing, by the operator's wallet **and** the node's own key |
+| Seal the genesis | The wallet that registered the descendant | The genesis hash and the first validators, write-once |
+| Add or remove a validator | The current validators | A QBFT vote; it passes with more than half |
+
+```bash
+npm run node -- dev <descendant>                    # one node, no consensus (anvil), for building against
+npm run node -- init <descendant> --operator 0x… --host <public IP or domain>   # prints a link to sign
+npm run node -- start <descendant> --host <public IP or domain> [--share]
+npm run node -- vote <descendant> add <node address>
+```
+
+`start` downloads Besu (checked against its published SHA-256; needs Java 25), re-derives the genesis
+from the sealed spec and checks the owner's signature before running it, and connects to the listed
+peers. The node's own RPC stays on `127.0.0.1`; `--share` puts a gateway in front of it that answers
+standard reads and signed transactions and refuses account, admin, debug, txpool and vote methods.
+
+The running chain is a standard EVM chain: validator, peer and transaction keys are classical
+secp256k1, and the post-quantum modules in the descendant's genome are not part of it.
+`tests/nodes.test.ts` runs four Besu validators, finalizes a transfer through the gateway, stops one
+validator and votes a fifth in.
+
 <img src=".github/assets/divider.svg" width="100%" alt="">
 
 ## Architecture
@@ -314,9 +346,11 @@ src/protocol/    the domain: Chain DNA, mutation lineages, replay, fork comparis
 src/pages/       one file per route
 src/lib/evm/     Base history loader, fork RPC, transaction inspection
 src/three/       WebGL scenes
-api/             Vercel functions (configs, benchmarks, ghosts, og images, …)
-contracts/       QForkRegistry + benchmark workloads (Foundry)
-tests/           234 tests: protocol, replay against Base Sepolia, benchmarks, lineages, crypto
+api/             Vercel functions (configs, benchmarks, ghosts, nodes, co-signer, og images, …)
+contracts/       QForkRegistry, QForkAccount + benchmark workloads (Foundry)
+nodekit/         the descendant node kit: Besu QBFT launcher and RPC gateway
+cosigner/        the self-hosted post-quantum co-signer
+tests/           280 tests: protocol, replay against Base Sepolia, benchmarks, lineages, crypto
 docs/            architecture, roadmap, feature status
 ```
 
@@ -335,6 +369,7 @@ docs/            architecture, roadmap, feature status
 | `/scanner` | Quantum exposure map of an existing chain |
 | `/blueprints`, `/build` | What do you want to build? Intent-driven blueprints |
 | `/species`, `/network` | Descendant explorer and registered networks |
+| `/network/:id/nodes` | A descendant's nodes: run commands, signed directory, sealed genesis, live view |
 
 Configuration lives in [`.env.example`](./.env.example). Deep dives:
 [architecture](./docs/QUANTUM_FORK_ARCHITECTURE.md) ·

@@ -1178,7 +1178,7 @@ function LabBench() {
                 ) : (
                   <p className="callout is-warn">MAINNET · Burns {formatNumber(quote.total)} real $QFORK, permanently. The server verifies the burn, then registers the descendant.</p>
                 )}
-                <p className="muted">Registering records the design, its receipt and a developer kit, and unlocks launching its token. No chain runs a descendant yet.</p>
+                <p className="muted">Registering records the design, its receipt and a developer kit, and unlocks launching its token. Quantum Fork hosts no descendant chain{ancestor === 'base' && chain === 'base' ? '; operators can run this one as a QBFT network with the node kit' : ''}.</p>
                 {!tierAvailability[tier].available && <p className="field-error">{tierAvailability[tier].reason}</p>}
               </div>
             </Station>
@@ -1322,7 +1322,7 @@ function LabBench() {
                   </div>
                   <div>
                     <dt>Running chain</dt>
-                    <dd>Not built. The design is registered; no network runs it yet.</dd>
+                    <dd>{ancestor === 'base' && chain === 'base' ? 'Not hosted. Operators run it as a QBFT network from the Nodes tab of its console.' : 'Not built. The design is registered; no network runs it.'}</dd>
                   </div>
                 </dl>
                 <div className="result-actions">

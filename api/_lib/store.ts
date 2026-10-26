@@ -163,4 +163,7 @@ export const keys = {
   faucet: (subject: string) => `qf:faucet:${subject}`,
   cosignLock: (account: string, id: string) => `qf:cosignlock:${account}:${id}`,
   cosignDaily: (subject: string, day: number) => `qf:cosign:${subject}:${day}`,
+  nodes: (descendant: string) => `qf:nodes:${descendant}`,
+  nodesLock: (descendant: string) => `qf:nodeslock:${descendant}`,
+  network: (descendant: string) => `qf:network:${descendant}`,
 }

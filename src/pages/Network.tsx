@@ -12,6 +12,7 @@ import { PROFILE_BY_ID, strainLabel } from '../protocol/profiles'
 import { Link } from '../router'
 import { Cryptography } from './network/Cryptography'
 import { Developers } from './network/Developers'
+import { Nodes } from './network/Nodes'
 import { Overview } from './network/Overview'
 import { Tokens } from './network/Tokens'
 
@@ -36,7 +37,9 @@ function Metrics({ view }: { view: ConsoleView }) {
     { label: 'Tokens', value: String(view.tokens.length), note: 'verified on-chain' },
     { label: 'Forks', value: String(view.forks.length), note: 'registered descendants' },
     { label: view.chain === 'base' ? 'Network' : 'Cluster', value: clusterName(view.network), note: 'where the burn and tokens live' },
-    { label: 'Running chain', value: 'Not built', note: <span className="nc-tag is-off">NO VALIDATORS</span> },
+    view.config.ancestor === 'base' && view.chain === 'base'
+      ? { label: 'Running chain', value: 'Run by operators', note: <Link to={networkHref(view.id, 'nodes')}>QBFT nodes →</Link> }
+      : { label: 'Running chain', value: 'Not built', note: <span className="nc-tag is-off">NO VALIDATORS</span> },
   ]
   return (
     <dl className="nc-metrics" aria-label="Descendant records">
@@ -143,7 +146,7 @@ export default function NetworkConsole({ id, tab }: { id: string; tab: NetworkTa
             <span>{view.code}</span>
             <span>{strainLabel(profile)}</span>
             <span>GEN-{descendant.generation}</span>
-            <span>Ancestor Solana</span>
+            <span>Ancestor {view.config.ancestor === 'base' ? 'Base' : 'Solana'}</span>
             <span className="nc-online">
               <i aria-hidden="true" /> Registered · {clusterName(view.network)}
             </span>
@@ -175,6 +178,7 @@ export default function NetworkConsole({ id, tab }: { id: string; tab: NetworkTa
       <div className="nc-body">
         {tab === 'overview' && <Overview {...props} />}
         {tab === 'tokens' && <Tokens {...props} />}
+        {tab === 'nodes' && <Nodes {...props} />}
         {tab === 'developers' && <Developers {...props} />}
         {tab === 'cryptography' && <Cryptography {...props} />}
       </div>

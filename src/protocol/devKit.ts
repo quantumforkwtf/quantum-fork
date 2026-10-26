@@ -92,7 +92,7 @@ export function descendantManifest(input: DevKitInput): DescendantManifest {
       profile: PROFILE_BY_ID[config.profile].name,
       modules: config.modules.map((id) => moduleFor(id, config.ancestor)).map((module) => ({ code: module.code, name: module.name, status: module.status })),
       validators: { count: config.validators.count, hardware: config.validators.hardware },
-      note: `A registered design. No chain runs this configuration yet; its burn and tokens live on ${input.chain === 'base' ? 'Base' : 'Solana'}. Module statuses are design statuses.`,
+      note: `A registered design. Quantum Fork hosts no chain for it${input.chain === 'base' && config.ancestor === 'base' ? '; operators can run it as a QBFT network with the node kit, a standard EVM chain without these modules' : ''}. Its burn and tokens live on ${input.chain === 'base' ? 'Base' : 'Solana'}. Module statuses are design statuses.`,
     },
     tokens: input.tokens,
     profile: `${input.siteUrl}/species/${input.id}`,

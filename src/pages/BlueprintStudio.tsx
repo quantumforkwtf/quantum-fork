@@ -52,9 +52,13 @@ export default function BlueprintStudio({ blueprint, answers }: { blueprint: Blu
         <Download size={15} strokeWidth={1.8} /> Export surface map
       </button>
     </>
+  ) : compiled.plan.action.kind === 'build' && compiled.plan.action.href ? (
+    <Link to={compiled.plan.action.href} className="btn btn-primary">
+      {compiled.plan.action.label}
+    </Link>
   ) : (
-    <button type="button" className="btn btn-primary" disabled title="No vault program exists in this build">
-      Deploy · not built
+    <button type="button" className="btn btn-primary" disabled title="The account factory is not deployed yet">
+      Create · factory not deployed
     </button>
   )
 

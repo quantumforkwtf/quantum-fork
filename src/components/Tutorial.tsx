@@ -49,8 +49,8 @@ const SIMPLE: Step[] = [
   },
   {
     kicker: 'Honest version',
-    title: NET.mainnet ? 'Registration is real. The chains are not running yet.' : 'Right now, it runs on devnet.',
-    body: `You register a descendant by burning ${NET.mainnet ? '$QFORK' : 'free test tokens'}, and can launch a real token for it. No chain runs a descendant yet. “Post-quantum” means built on new security standards, not unbreakable.`,
+    title: NET.mainnet ? 'Registration is real. Chains run where operators run them.' : 'Right now, it runs on devnet.',
+    body: `You register a descendant by burning ${NET.mainnet ? '$QFORK' : 'free test tokens'}, and can launch a real token for it. Quantum Fork hosts no descendant chains; operators can run Base descendants as standard EVM networks. “Post-quantum” means built on new security standards, not unbreakable.`,
     organism: 'descendant',
   },
 ]

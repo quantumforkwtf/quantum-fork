@@ -37,7 +37,7 @@ export type PlatformId = 'lab' | 'scanner' | 'infrastructure'
 export const PLATFORM: Record<PlatformId, { name: string; status: BlueprintStatus; detail: string }> = {
   lab: { name: 'Genome configuration', status: 'AVAILABLE', detail: 'Configure, validate and diff a genome in the lab.' },
   scanner: { name: 'Exposure scanner', status: 'AVAILABLE', detail: 'A hand-built map of Base’s and Solana’s cryptographic dependencies, with sources.' },
-  infrastructure: { name: 'Network infrastructure', status: 'COMING SOON', detail: 'Real validators, RPC and explorer are not built. No chain runs a descendant yet.' },
+  infrastructure: { name: 'Network infrastructure', status: 'EXPERIMENTAL', detail: 'Operators run Base descendants as QBFT networks (Besu) with the node kit and list them in a signed directory. Standard EVM chains with classical keys and no explorer; Quantum Fork hosts none.' },
 }
 
 export type ComponentId =
@@ -165,7 +165,15 @@ export const COMPONENTS: AppComponent[] = [
     implementation: `${ACCOUNT_BUILT} The contract enforces every limit; nothing relies on the agent behaving.`,
     href: '/account',
   },
-  { id: 'permissioning', code: 'AC-10', name: 'VALIDATOR PERMISSIONING', summary: 'Only approved operators may join the validator set.', primitive: 'Allow-listed validator identities', status: 'COMING SOON', implementation: 'Not yet specified. The genome records it without enforcing it.' },
+  {
+    id: 'permissioning',
+    code: 'AC-10',
+    name: 'VALIDATOR PERMISSIONING',
+    summary: 'Only approved operators may join the validator set.',
+    primitive: 'QBFT validator voting (Besu)',
+    status: 'EXPERIMENTAL',
+    implementation: 'On a Base descendant’s operator-run network, the owner seals the first validators from signed listings, and a validator joins or leaves only when more than half of the current validators vote for it. Validator keys are classical secp256k1.',
+  },
   { id: 'surface-map', code: 'AC-11', name: 'SURFACE MAP', summary: 'A checklist that maps where your application depends on classical public-key cryptography.', primitive: 'Self-reported checklist', status: 'AVAILABLE', implementation: 'Runs in your browser from your answers. Nothing is uploaded.' },
   { id: 'repo-scan', code: 'AC-12', name: 'REPOSITORY SCAN', summary: 'Finds RSA, elliptic-curve and Diffie-Hellman usage, signed tokens, TLS and SSH configuration, committed keys and crypto dependencies in your code.', primitive: 'Static pattern scan', status: 'AVAILABLE', implementation: 'Public GitHub repositories are scanned on the server and discarded; local folders and pasted code are scanned in your browser. It matches patterns in the source text.' },
   { id: 'tls-upgrade', code: 'AC-13', name: 'HYBRID TLS', summary: 'Negotiate hybrid post-quantum key exchange on every TLS connection.', primitive: 'X25519MLKEM768', status: 'RESEARCH', implementation: `${GUIDANCE} Recent releases of major TLS libraries support it.`, advisory: true },
@@ -323,7 +331,7 @@ const NETWORK_REMAINS_CLASSICAL = [
 ]
 
 const REGISTERED_INFRA = [
-  'No chain runs a descendant yet: sequencer, RPC and an explorer are not built.',
+  'Quantum Fork hosts no descendant chain. Operators can run a Base descendant as a QBFT network with the node kit (validators, consensus, a read-only RPC); there is no OP Stack sequencer or explorer.',
   'A QFORK burn, verified on-chain by the server, registers the design permanently with a receipt and a developer kit.',
   'Tokens for the descendant are real tokens on Base, launched through Clanker from the owner’s wallet.',
 ]
@@ -625,7 +633,7 @@ export const BLUEPRINTS: Blueprint[] = [
     remainsClassical: NETWORK_REMAINS_CLASSICAL,
     infrastructure: [...REGISTERED_INFRA.slice(0, 1), `Agent wallets and spending policies are the QForkAccount contract, running ${ACCOUNT_WHERE}. On Base its keys are classical ECDSA.`],
     compatibility: [...NETWORK_COMPAT, { label: 'Agent frameworks', verdict: 'PARTIAL', detail: 'Any agent that can send an EVM transaction can spend through QForkAccount. There is no dedicated agent SDK.' }],
-    limitations: [`No chain runs this network yet; agent wallets run ${ACCOUNT_WHERE} only.`, 'On Base, agent and owner keys are ordinary ECDSA wallets, not post-quantum.'],
+    limitations: [`Quantum Fork hosts no chain for this network; agent wallets run ${ACCOUNT_WHERE}.`, 'On Base, agent and owner keys are ordinary ECDSA wallets, not post-quantum.'],
     recommendedGenome: { ...NETWORK_BASE, pqProfile: 'hybrid', security: 'recommended', authorization: 'agent-policy', components: ['agent-wallets', 'spending-policy'], network: network('AGENT ECONOMY', 'QAGT', 'qf-agent-economy', { baseFeeLamports: 1_000 }) },
     optionalModules: ['vid'],
     requiredCapabilities: ['platform:lab', 'module:cag', 'module:hsp', 'module:pqk', 'component:agent-wallets', 'component:spending-policy'],
@@ -661,20 +669,24 @@ export const BLUEPRINTS: Blueprint[] = [
     index: '06',
     name: 'Enterprise Quantum Network',
     headline: 'Create private blockchain infrastructure for an organization.',
-    description: 'A small, organization-run network with private access and a post-quantum migration profile. Validator permissioning is not built yet.',
+    description: 'A small, organization-run network with permissioned validators and a post-quantum migration profile. Members run the nodes; validators join only by vote.',
     category: 'NETWORK',
     visualType: 'enterprise',
     tone: 'steel',
     visualLabels: ['VALIDATOR ACCESS', 'POLICIES', 'MIGRATION PROFILE'],
     ancestor: 'base',
     idealFor: ['FINANCIAL INSTITUTIONS', 'CONSORTIA', 'INTERNAL SETTLEMENT', 'REGULATED ASSETS'],
-    building: 'A Base-derived network run by your organization or a consortium, with private RPC access and a chosen migration profile.',
+    building: 'A Base-derived network run on your organization’s or a consortium’s own machines, with validators admitted by vote and a chosen migration profile.',
     configures: ['Validator access', 'Permissioning', 'Organization policies', 'Migration profile', 'RPC access'],
-    securityModel: ['Accounts use hybrid signatures.', 'Access is restricted at the RPC layer.', 'Validator permissioning would restrict who can join consensus. It is not specified yet.'],
+    securityModel: [
+      'Accounts use hybrid signatures in the genome.',
+      'Only the sealed genesis validators, and those the current validators vote in, take part in consensus (QBFT).',
+      'Each member’s node keeps its RPC on its own machine unless the operator shares a read-only gateway.',
+    ],
     remainsClassical: NETWORK_REMAINS_CLASSICAL,
-    infrastructure: [...REGISTERED_INFRA.slice(0, 1), 'Permissioning does not exist, so only the network genome can be designed.'],
+    infrastructure: [...REGISTERED_INFRA.slice(0, 1), 'Validator permissioning is QBFT voting on the operator-run network.'],
     compatibility: [...NETWORK_COMPAT, { label: 'Identity systems', verdict: 'UNSOLVED', detail: 'No integration with enterprise identity providers exists.' }],
-    limitations: ['Validator permissioning and organization policies are not built.', 'Registration is disabled for this blueprint until they are.'],
+    limitations: ['The running chain is a standard EVM chain with classical secp256k1 keys; the genome’s post-quantum modules are not part of it.', 'There is no authenticated RPC and no identity-provider integration.', 'Quantum Fork does not host or monitor the network.'],
     recommendedGenome: { ...NETWORK_BASE, pqProfile: 'hybrid', security: 'recommended', authorization: 'organization', networkType: 'permissioned', components: ['permissioning', 'org-policy'], network: network('ENTERPRISE NETWORK', 'QENT', 'qf-enterprise-network', { validators: 8, rpc: 'private', baseFeeLamports: 0, burnPct: 0 }) },
     optionalModules: ['vid'],
     requiredCapabilities: ['platform:lab', 'module:cag', 'module:hsp', 'module:pqk', 'component:permissioning'],
@@ -693,8 +705,8 @@ export const BLUEPRINTS: Blueprint[] = [
         prompt: 'Who can read the ledger?',
         defaultOption: 'private',
         options: [
-          { id: 'private', label: 'Members only', detail: 'A private, authenticated RPC.', patch: { network: { rpc: 'private' } } },
-          { id: 'public', label: 'Anyone can read', detail: 'A public RPC for transparency.', patch: { network: { rpc: 'public' } } },
+          { id: 'private', label: 'Members only', detail: 'Each member reads through its own node.', patch: { network: { rpc: 'private' } } },
+          { id: 'public', label: 'Anyone can read', detail: 'Operators share a read-only RPC.', patch: { network: { rpc: 'public' } } },
         ],
       },
       { ...SECURITY_QUESTION, prompt: 'Migration profile?' },

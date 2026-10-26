@@ -7,6 +7,7 @@ import { networkHref, type TabProps, timestamp } from '../../lib/networkUi'
 import { remainingExposure } from '../../protocol/descendant'
 import { PROFILE_BY_ID, strainLabel } from '../../protocol/profiles'
 import { Link } from '../../router'
+import { useNodeDirectory } from '../../lib/nodeDirectory'
 
 const TONE = { done: 'var(--green)', todo: 'var(--yellow)', missing: 'var(--muted)' } as const
 
@@ -15,13 +16,18 @@ export function Overview({ view, launch }: TabProps) {
   const profile = PROFILE_BY_ID[config.profile]
   const receipt = descendant.receipt
   const remaining = remainingExposure(config)
+  const runnable = config.ancestor === 'base' && view.chain === 'base'
+  const directory = useNodeDirectory(runnable ? view.id : '').data
+  const sealed = directory?.network?.spec.validators.length
 
   const exists: { label: string; state: string; tone: keyof typeof TONE; href?: string }[] = [
     { label: 'Registered design', state: 'DONE', tone: 'done', href: `/species/${view.id}` },
     { label: 'Burn receipt', state: receipt ? 'VERIFIED' : 'MISSING', tone: receipt ? 'done' : 'missing', href: receipt ? `/burn/${receipt.signature}` : undefined },
     { label: 'Token', state: view.tokens.length ? `${view.tokens.length} LIVE` : 'NOT YET', tone: view.tokens.length ? 'done' : 'todo', href: networkHref(view.id, 'tokens') },
     { label: 'Developer kit', state: 'READY', tone: 'done', href: networkHref(view.id, 'developers') },
-    { label: 'Running chain (validators, RPC, explorer)', state: 'NOT BUILT', tone: 'missing' },
+    runnable
+      ? { label: 'Network genesis (QBFT nodes)', state: sealed ? `SEALED · ${sealed} VALIDATOR${sealed === 1 ? '' : 'S'}` : 'NOT SEALED', tone: sealed ? 'done' : 'todo', href: networkHref(view.id, 'nodes') }
+      : { label: 'Running chain (validators, RPC, explorer)', state: 'NOT BUILT', tone: 'missing' },
   ]
 
   return (
@@ -115,7 +121,12 @@ export function Overview({ view, launch }: TabProps) {
               </li>
             ))}
           </ul>
-          <p className="nc-fineprint">No chain runs a descendant yet. Its burn and its tokens are real {view.chain === 'base' ? 'Base' : 'Solana'} transactions.</p>
+          <p className="nc-fineprint">
+            {runnable
+              ? 'Quantum Fork does not host descendant chains: this one runs only on machines its operators run, as a standard EVM chain without the genome’s post-quantum modules.'
+              : 'No chain runs this descendant.'}{' '}
+            Its burn and its tokens are real {view.chain === 'base' ? 'Base' : 'Solana'} transactions.
+          </p>
         </ConsoleSection>
 
         <ConsoleSection code="03" title="Cryptography">

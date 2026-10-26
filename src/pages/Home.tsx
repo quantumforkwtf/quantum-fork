@@ -574,10 +574,10 @@ const BEGINNING: BeginningStage[] = [
   },
   {
     title: 'Run its own chain',
-    body: 'Validators, RPC and an explorer that run the descendant’s genome. Not built yet, and never shown as running.',
-    status: 'COMING SOON',
-    tone: 'var(--muted)',
-    system: null,
+    body: 'Operators run a Base descendant as a QBFT network on their own machines with the node kit: validators, consensus and a read-only RPC. It is a standard EVM chain; the genome’s post-quantum modules are not part of it.',
+    status: 'OPERATOR-RUN',
+    tone: 'var(--green)',
+    system: 'Nodes',
     adds: [],
   },
 ]
@@ -653,7 +653,7 @@ function BeginningSection() {
         <Link to="/network" className="btn btn-secondary">
           Your descendants
         </Link>
-        <p className="muted">A descendant’s own chain is not built yet. Everything before it on this list is real.</p>
+        <p className="muted">Everything on this list is real. A descendant’s chain runs only where its operators run it; Quantum Fork hosts none.</p>
       </div>
     </section>
   )

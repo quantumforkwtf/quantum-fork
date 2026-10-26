@@ -12,5 +12,5 @@
     "noEmit": true,
     "resolveJsonModule": true
   },
-  "include": ["api", "tests", "cosigner", "src/protocol", "src/lab/genome.ts", "src/lab/morphology.ts", "src/lab/dnaGlyph.ts", "src/lib/random.ts", "src/lib/solana/tx.ts"]
+  "include": ["api", "tests", "cosigner", "nodekit", "src/protocol", "src/lab/genome.ts", "src/lab/morphology.ts", "src/lab/dnaGlyph.ts", "src/lib/random.ts", "src/lib/solana/tx.ts"]
 }

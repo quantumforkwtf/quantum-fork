@@ -11,6 +11,7 @@
     "typecheck": "tsc -b --force",
     "preview": "vite preview",
     "preflight": "node scripts/launch-preflight.mjs",
+    "node": "esbuild nodekit/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=nodekit/dist/qfork-node.mjs --log-level=warning && node nodekit/dist/qfork-node.mjs",
     "cosigner": "esbuild cosigner/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=cosigner/dist/qfork-cosigner.mjs --log-level=warning && node cosigner/dist/qfork-cosigner.mjs"
   },
   "dependencies": {

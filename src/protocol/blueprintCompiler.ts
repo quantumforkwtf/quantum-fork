@@ -15,6 +15,7 @@ import {
   type QuestionOption,
   STATUS_RANK,
 } from './blueprints.js'
+import { ACCOUNT_FACTORY_DEPLOYMENTS } from './account.js'
 import type { Chain } from './base.js'
 import { type BurnEstimate, estimateBurn } from './burnEngine.js'
 import { type DeploymentTier, type DescendantConfig, descendantSchema, normalizeConfig } from './descendant.js'
@@ -266,11 +267,11 @@ function networkLabel(genome: BlueprintGenome): [string, string] {
   const shape = genome.network
   switch (genome.networkType) {
     case 'independent':
-      return [`INDEPENDENT L1 · ${shape?.validators} VALIDATORS`, `Native asset ${shape?.symbol}. ${shape?.rpc === 'private' ? 'Private' : 'Public'} RPC, as designed. No chain runs it yet.`]
+      return [`INDEPENDENT L1 · ${shape?.validators} VALIDATORS`, `Native asset ${shape?.symbol}. ${shape?.rpc === 'private' ? 'Private' : 'Public'} RPC, as designed. It runs only where operators run it.`]
     case 'private':
-      return [`PRIVATE NETWORK · ${shape?.validators} VALIDATORS`, `${shape?.rpc === 'private' ? 'Private' : 'Public'} RPC, as designed. No chain runs it yet.`]
+      return [`PRIVATE NETWORK · ${shape?.validators} VALIDATORS`, `${shape?.rpc === 'private' ? 'Private' : 'Public'} RPC, as designed. It runs only where operators run it.`]
     case 'permissioned':
-      return [`ORGANIZATION NETWORK · ${shape?.validators} VALIDATORS`, 'Permissioning is not built, so the design records it without enforcing it.']
+      return [`ORGANIZATION NETWORK · ${shape?.validators} VALIDATORS`, 'Validators are sealed at genesis and admitted later only by vote of the current set (QBFT).']
     case 'on-base':
       return ['NO NEW NETWORK', 'Runs as a contract on Base. Base itself stays classical.']
     case 'existing-app':
@@ -398,7 +399,9 @@ export function compileBlueprint(blueprint: Blueprint, input: Answers = {}, runt
       { label: 'QFORK burn', state: burnState, detail: burnDetail },
       { label: 'Descendant registered', state: burnState, detail: 'A permanent record with a burn receipt, a public page and a developer kit.' },
       { label: 'Token launch', state: registrable ? 'AVAILABLE' : 'UNAVAILABLE', detail: launchDetail },
-      { label: 'Running chain', state: 'UNAVAILABLE', detail: 'Not built. No sequencer, RPC or explorer runs a descendant yet.' },
+      parent === 'base'
+        ? { label: 'Running chain', state: registrable ? 'AVAILABLE' : 'UNAVAILABLE', detail: 'Once registered, operators run it as a QBFT network with the node kit: a standard EVM chain with classical keys, no sequencer or explorer, hosted by no one but them.' }
+        : { label: 'Running chain', state: 'UNAVAILABLE', detail: 'Solana descendants have no running chain.' },
     ]
     action =
       blueprint.route === 'expert'
@@ -426,12 +429,20 @@ export function compileBlueprint(blueprint: Blueprint, input: Answers = {}, runt
         ]
       : [
           { label: 'Genome configured', state: 'AVAILABLE', detail: 'Compiled from the blueprint and your answers.' },
-          { label: 'Vault program', state: 'UNAVAILABLE', detail: 'Not written. Nothing can be deployed.' },
-          { label: 'QFORK burn', state: 'UNAVAILABLE', detail: 'No application module can be burned for in this build.' },
+          {
+            label: 'Vault account',
+            state: ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'AVAILABLE' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'DEVNET' : 'UNAVAILABLE',
+            detail: ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'QForkAccount on Base.' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'QForkAccount on Base Sepolia, test ETH only.' : 'QForkAccount is tested on a local chain; its factory is not deployed yet.',
+          },
+          { label: 'Post-quantum co-signer', state: 'AVAILABLE', detail: 'On your machine with npm run cosigner, or hosted where enabled. Server-trusted.' },
+          { label: 'QFORK burn', state: 'UNAVAILABLE', detail: 'Nothing is burned; an account costs only Base gas.' },
         ]
+    const accountsLive = Boolean(ACCOUNT_FACTORY_DEPLOYMENTS.base || ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'])
     action = mapping
       ? { kind: 'scan', label: blueprint.cta, href: APP_SCAN_PATH, note: 'Free; nothing is burned. Public repositories are scanned on the server and discarded; local folders never leave your browser.' }
-      : { kind: 'design', label: 'Design genome', href, note: 'Explore the vault genome. Building it needs a vault program, which does not exist yet.' }
+      : accountsLive
+        ? { kind: 'build', label: 'Open accounts', href: '/account', note: 'Create the account, commit your post-quantum keys and add the co-signer as an owner.' }
+        : { kind: 'design', label: 'Design genome', href, note: 'Explore the vault genome. The account factory is not deployed yet, so the vault cannot be created here.' }
   }
 
   /* compatibility */

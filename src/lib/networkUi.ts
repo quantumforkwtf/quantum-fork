@@ -12,11 +12,12 @@ import type { DevKitInput, KitCluster } from '../protocol/devKit'
 import { latticeFor, type LayerSpec, networkLayers } from '../protocol/networkLayers'
 import type { TokenRecord } from '../protocol/tokens'
 
-export type NetworkTab = 'overview' | 'tokens' | 'developers' | 'cryptography'
+export type NetworkTab = 'overview' | 'tokens' | 'nodes' | 'developers' | 'cryptography'
 
 export const NETWORK_TABS: { id: NetworkTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'tokens', label: 'Tokens' },
+  { id: 'nodes', label: 'Nodes' },
   { id: 'developers', label: 'Developers' },
   { id: 'cryptography', label: 'Cryptography' },
 ]

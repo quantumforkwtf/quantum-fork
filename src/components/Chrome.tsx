@@ -476,10 +476,10 @@ export function Footer() {
           <div className="footer-copy">
             <p>
               {baseLive
-                ? `$QFORK is live on Base: launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Descendants are registered by burning $QFORK to 0x…dEaD, verified on-chain by the server${base?.registration.available ? '' : '; registration is not open yet'}. Descendant tokens are real Clanker tokens on Base. No chain runs a descendant yet.`
+                ? `$QFORK is live on Base: launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Descendants are registered by burning $QFORK to 0x…dEaD, verified on-chain by the server${base?.registration.available ? '' : '; registration is not open yet'}. Descendant tokens are real Clanker tokens on Base. Quantum Fork hosts no descendant chains; operators can run Base descendants as QBFT networks.`
                 : NET.mainnet
-                  ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet.'
-                  : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}
+                  ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. Quantum Fork hosts no descendant chains; operators can run Base descendants as QBFT networks.'
+                  : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. Quantum Fork hosts no descendant chains, and mainnet registration opens when $QFORK launches.'}
             </p>
             <p>
               Post-quantum here means descendants designed around NIST post-quantum standards; it does not mean quantum-proof.{' '}

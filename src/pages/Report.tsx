@@ -187,7 +187,7 @@ const LIMITS: Record<Descendant['origin'], string[]> = {
   example: ['Example data. This descendant was never registered and is shown only so the explorer is not empty.', 'Its genome is a configuration, not running code.'],
   registered: [
     'Registered by a server-verified burn. On devnet the burned token is a test token with no value.',
-    'No chain runs this descendant yet: there are no validators, RPC endpoints or explorer for it.',
+    'Quantum Fork hosts no chain for this descendant. Base descendants can be run by operators as a standard EVM network (QBFT), without the genome’s post-quantum modules.',
     'Post-quantum modules are design specifications; none are implemented.',
   ],
 }
@@ -460,7 +460,9 @@ export default function Report({ id }: { id: string }) {
           <p className="muted">
             {item.origin === 'ancestor'
               ? facts.running
-              : 'Not built. Registration records the design and its burn; no chain runs this genome yet.'}
+              : item.config?.ancestor === 'base' && item.receipt?.chain === 'base'
+                ? 'Not hosted by Quantum Fork. Operators can run it as a QBFT network on their own machines: a standard EVM chain, without the genome’s post-quantum modules.'
+                : 'Not built. Registration records the design and its burn; no chain runs this genome.'}
           </p>
         </Section>
 

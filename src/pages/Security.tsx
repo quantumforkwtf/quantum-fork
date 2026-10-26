@@ -88,7 +88,8 @@ const ASSUMPTIONS = [
 ]
 
 const LIMITATIONS = [
-  'No chain runs a descendant yet. Registration records a design and its burn; there are no validators, RPC endpoints or explorers for descendants.',
+  'Quantum Fork hosts no descendant chains. A Base descendant runs only where operators run the node kit: a standard EVM chain (Besu, QBFT) with classical secp256k1 keys, without the genome’s post-quantum modules. Solana descendants have no chain.',
+  'The node directory lists what operators sign. It does not check uptime or vouch for operators, and the site never relays node traffic.',
   ...(NET.mainnet ? [] : ['Devnet registration burns a test token with no value. Devnet tokens launched for a descendant have no value either.']),
   'Post-quantum modules are design specifications, not shipped code.',
   'The scanner is a curated model, not automated analysis of a codebase.',

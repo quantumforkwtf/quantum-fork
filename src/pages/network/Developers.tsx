@@ -1,7 +1,8 @@
 import { Copy, Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { ConsoleSection } from '../../components/network/Parts'
-import { downloadFile, type TabProps } from '../../lib/networkUi'
+import { downloadFile, networkHref, type TabProps } from '../../lib/networkUi'
+import { Link } from '../../router'
 import { copyText } from '../../lib/toast'
 import { explorerAddress } from '../../config'
 import { assertNoSecrets, devKitFiles, kitNetwork, kitRpc, quickstart } from '../../protocol/devKit'
@@ -39,7 +40,9 @@ export function Developers({ view }: TabProps) {
     { label: 'Descendant id', value: <code>{view.config.network.networkId}</code>, status: 'REGISTERED' },
     { label: 'Manifest', value: 'descendant.json, below', status: 'GENERATED' },
     { label: 'SDK', value: `${base ? 'viem' : '@solana/web3.js'}, configured by qfork.config.ts.`, status: 'STANDARD TOOLING' },
-    { label: 'Descendant RPC', value: <span className="muted">No chain runs a descendant yet.</span>, status: 'NOT BUILT' },
+    view.config.ancestor === 'base' && base
+      ? { label: 'Descendant RPC', value: <Link to={networkHref(view.id, 'nodes')}>Run a node, or use one an operator lists →</Link>, status: 'OPERATOR-RUN' }
+      : { label: 'Descendant RPC', value: <span className="muted">Only EVM descendants registered on Base run as a network.</span>, status: 'NOT BUILT' },
   ]
 
   return (
