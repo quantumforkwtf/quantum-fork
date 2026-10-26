@@ -2,11 +2,13 @@ import { ArrowRight, Atom, Boxes, ChevronDown, FlaskConical, Network, ScanLine, 
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { GITHUB_REPO, GITHUB_URL, useServerStatus, X_HANDLE, X_URL } from '../config'
 import { STATUS_TONE } from '../lab/blueprintVisual'
+import { ACCOUNT_MAINNET } from '../lib/evm/account'
 import { setSoundEnabled, useSoundEnabled } from '../lib/sound'
 import { NET } from '../lib/networkCopy'
 import { useToasts } from '../lib/toast'
 import { useLocation } from '../navigation'
 import { recommendedStatus } from '../protocol/blueprintCompiler'
+import { QFORK_MARKET } from '../protocol/base'
 import { FEATURED_BLUEPRINTS, type BlueprintStatus } from '../protocol/blueprints'
 import { Link } from '../router'
 import { replayTour } from '../lib/tour'
@@ -31,6 +33,7 @@ const FOOTER_LINKS = [
       { to: '/create', label: 'Genesis Studio' },
       { to: '/build', label: 'Help me choose' },
       { to: '/blueprints', label: 'Blueprints' },
+      { to: '/account', label: ACCOUNT_MAINNET ? 'Accounts' : 'Accounts (Base Sepolia)' },
       { to: '/lab', label: 'Lab' },
       { to: '/network', label: 'Your networks' },
     ],
@@ -303,6 +306,9 @@ function BuildMenu({ id, onNavigate }: { id: string; onNavigate: () => void }) {
             Start building <ArrowRight size={14} strokeWidth={1.8} />
           </span>
         </BuildLink>
+        <Link to="/account" className="nav-menu-link" onClick={onNavigate}>
+          Shared accounts and agent wallets <ArrowRight size={13} strokeWidth={1.8} />
+        </Link>
         <Link to="/quantumize" className="nav-menu-link" onClick={onNavigate}>
           Scan your app’s code <ArrowRight size={13} strokeWidth={1.8} />
         </Link>
@@ -469,9 +475,11 @@ export function Footer() {
           </div>
           <div className="footer-copy">
             <p>
-              {NET.mainnet
-                ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet.'
-                : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}
+              {baseLive
+                ? `$QFORK is live on Base: launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Registering descendants with $QFORK is not open yet. Descendant tokens are real Clanker tokens on Base. No chain runs a descendant yet.`
+                : NET.mainnet
+                  ? 'Descendants are registered by burning $QFORK on Base, verified on-chain by the server. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet.'
+                  : 'Descendants are registered by burning test QFORK, verified on-chain by the server; test tokens have no value. Their tokens are real Clanker tokens on Base. No chain runs a descendant yet, and mainnet registration opens when $QFORK launches.'}
             </p>
             <p>
               Post-quantum here means descendants designed around NIST post-quantum standards; it does not mean quantum-proof.{' '}

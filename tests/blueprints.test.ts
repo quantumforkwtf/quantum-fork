@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs'
 import { blueprintCard } from '../api/_lib/specimen'
 import { describe, expect, it } from 'vitest'
 import { blueprintLabHref, capabilityStatus, compileBlueprint, decodeAnswers, encodeAnswers, genomeToConfig, resolveAnswers } from '../src/protocol/blueprintCompiler'
-import { BLUEPRINT_BY_SLUG, BLUEPRINTS, FEATURED_BLUEPRINTS, findBlueprint, INTENTS, STATUS_RANK } from '../src/protocol/blueprints'
+import { ACCOUNT_FACTORY_DEPLOYMENTS } from '../src/protocol/account'
+import { ACCOUNT_STATUS, BLUEPRINT_BY_SLUG, BLUEPRINTS, COMPONENT_BY_ID, FEATURED_BLUEPRINTS, findBlueprint, INTENTS, STATUS_RANK } from '../src/protocol/blueprints'
 import { BURN_OPERATIONS, estimateBurn } from '../src/protocol/burnEngine'
 import { defaultConfig, descendantSchema, genomeDiff } from '../src/protocol/descendant'
 import { CHAIN_BURN_SCALE, quoteGenesis } from '../src/protocol/pricing'
@@ -94,7 +95,7 @@ describe('compileBlueprint', () => {
     }
     expect(compileBlueprint(bp('quantum-chain')).status).toBe('RESEARCH')
     expect(compileBlueprint(bp('quantum-vault')).status).toBe('RESEARCH')
-    expect(compileBlueprint(bp('quantum-ai-economy')).status).toBe('COMING SOON')
+    expect(compileBlueprint(bp('quantum-ai-economy')).status).toBe('RESEARCH')
     expect(compileBlueprint(bp('enterprise-quantum-network')).status).toBe('COMING SOON')
     expect(compileBlueprint(bp('quantumize-my-app')).status).toBe('AVAILABLE')
     expect(compileBlueprint(bp('quantumize-my-app'), { kind: 'wallet', signin: 'tokens', longevity: 'yes' }).status).toBe('AVAILABLE')
@@ -114,9 +115,10 @@ describe('compileBlueprint', () => {
     expect(chain.plan.tiers.testnet.available).toBe(false)
     expect(compileBlueprint(bp('quantum-chain'), {}, { devnetBurn: true }).plan.tiers.testnet.available).toBe(true)
 
-    const agents = compileBlueprint(bp('quantum-ai-economy'), {}, { devnetBurn: true })
-    expect(agents.plan.action.kind).toBe('design')
-    expect(agents.plan.tiers.testnet.available).toBe(false)
+    const enterprise = compileBlueprint(bp('enterprise-quantum-network'), {}, { devnetBurn: true })
+    expect(enterprise.plan.action.kind).toBe('design')
+    expect(enterprise.plan.tiers.testnet.available).toBe(false)
+    expect(compileBlueprint(bp('quantum-ai-economy'), {}, { devnetBurn: true }).plan.tiers.testnet.available).toBe(true)
 
     expect(compileBlueprint(bp('quantum-vault')).plan.action.kind).toBe('design')
     expect(compileBlueprint(bp('quantumize-my-app')).plan.action).toMatchObject({ kind: 'scan', href: '/quantumize' })
@@ -155,11 +157,26 @@ describe('compileBlueprint', () => {
     expect(disabled.answers.chain).toBe('base')
   })
 
-  it('records unbuilt components and lowers the status when an answer selects one', () => {
+  it('records the components an answer selects and warns about the unbuilt ones', () => {
     const vault = compileBlueprint(bp('quantum-vault'), { authorize: 'org' })
     expect(vault.genome.components).toContain('org-policy')
-    expect(vault.status).toBe('COMING SOON')
-    expect(vault.warnings.some((item) => /ORGANIZATION POLICY is not built/.test(item.message))).toBe(true)
+    expect(vault.status).toBe('RESEARCH')
+    expect(vault.warnings.some((item) => /is not built/.test(item.message))).toBe(false)
+
+    const enterprise = compileBlueprint(bp('enterprise-quantum-network'))
+    expect(enterprise.status).toBe('COMING SOON')
+    expect(enterprise.warnings.some((item) => /VALIDATOR PERMISSIONING is not built/.test(item.message))).toBe(true)
+  })
+
+  it('labels the account components by where QForkAccount actually runs', () => {
+    const expected = ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'AVAILABLE' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'TESTNET' : 'EXPERIMENTAL'
+    expect(ACCOUNT_STATUS).toBe(expected)
+    for (const id of ['pq-keyset', 'threshold-auth', 'org-policy', 'agent-wallets', 'spending-policy'] as const) {
+      expect(COMPONENT_BY_ID[id]).toMatchObject({ status: expected, href: '/account' })
+      expect(COMPONENT_BY_ID[id].implementation).toMatch(/QForkAccount/)
+    }
+    for (const id of ['hybrid-auth', 'pq-recovery', 'guardian-recovery'] as const) expect(COMPONENT_BY_ID[id].status).toBe('RESEARCH')
+    expect(COMPONENT_BY_ID['threshold-auth'].implementation).toMatch(/classical, not hybrid/)
   })
 
   it('keeps Base classical in the vault readout', () => {

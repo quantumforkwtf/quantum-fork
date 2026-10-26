@@ -20,6 +20,8 @@ export type FailureCode =
   | 'WALLET_UNSUPPORTED'
   | 'ANCHOR_FAILED'
   | 'ANCHOR_NOT_RECORDED'
+  | 'ACCOUNT_REJECTED'
+  | 'ACCOUNT_TX_FAILED'
 
 export type Answer = 'NO' | 'YES' | 'NETWORK FEE ONLY' | 'CHECK EXPLORER'
 
@@ -193,6 +195,22 @@ export const FAILURES: Record<FailureCode, Failure> = {
     qforkBurned: 'NO',
     retrySafe: 'YES',
     next: 'The on-chain record exists if the transaction succeeded. Verification can be retried with the same transaction hash.',
+  },
+  ACCOUNT_REJECTED: {
+    title: 'THE ACCOUNT WOULD REFUSE THIS',
+    happened: 'A dry run of the transaction reverted, so it was not sent.',
+    fundsMoved: 'NO',
+    qforkBurned: 'NO',
+    retrySafe: 'AFTER FIXING',
+    next: 'The reason above comes from the account contract. Change the inputs or wait for the missing approvals.',
+  },
+  ACCOUNT_TX_FAILED: {
+    title: 'TRANSACTION FAILED',
+    happened: 'The transaction was sent but did not succeed.',
+    fundsMoved: 'NETWORK FEE ONLY',
+    qforkBurned: 'NO',
+    retrySafe: 'YES',
+    next: 'Check the transaction on the explorer. Account state only changes when a transaction succeeds.',
   },
   FAUCET_FAILED: {
     title: 'FAUCET UNAVAILABLE',

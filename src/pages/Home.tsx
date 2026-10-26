@@ -19,6 +19,7 @@ import { usePageMeta } from '../lib/meta'
 import { NET, useRegistrationLabel } from '../lib/networkCopy'
 import { ANCESTORS, exposureCounts, FINDINGS, type FindingStatus, LOCI, MODEL } from '../protocol/ancestors'
 import { compileBlueprint, recommendedStatus } from '../protocol/blueprintCompiler'
+import { QFORK_MARKET } from '../protocol/base'
 import { BLUEPRINT_BY_SLUG, FEATURED_BLUEPRINTS, INTENTS } from '../protocol/blueprints'
 import { ancestorGenome } from '../protocol/descendant'
 import { MODULE_STATUSES, PQ_MODULES } from '../protocol/modules'
@@ -493,8 +494,9 @@ function BurnSection() {
           Burn QFORK. <span>Create the descendant.</span>
         </h2>
         <p className="section-lede">
-          Every descendant is registered by burning QFORK, an ERC-20 on Base, with the token’s own burn() function. The server verifies the burn on-chain before anything is recorded: supply goes down, and
-          nothing is sent to a wallet.
+          {baseLive
+            ? 'Registration is designed around burning QFORK, verified on-chain by the server before anything is recorded. $QFORK is live on Base; registering with it is not open yet.'
+            : 'Every descendant is registered by burning QFORK, an ERC-20 on Base. The server verifies the burn on-chain before anything is recorded: supply goes down, and nothing is sent to a wallet.'}
         </p>
       </header>
       <ol ref={ref} className={`lifecycle ${seen ? 'is-seen' : ''}`}>
@@ -511,9 +513,9 @@ function BurnSection() {
       <div className="burn-foot">
         <p className="muted">
           {baseLive
-            ? 'Launched through Clanker. Supply is read from the token contract on Base.'
+            ? `Launched on ${QFORK_MARKET.launchpad}, trading on ${QFORK_MARKET.dex}. Supply is read from the token contract on Base.`
             : NET.mainnet
-              ? 'The token launches on Base through Clanker. Until it does, there is no price to show.'
+              ? 'The token launches on Base. Until it does, there is no price to show.'
               : 'The token has not launched, so there is no price to show. Until then, registration burns a test token with no value.'}
         </p>
         <Link to="/qfork" className="btn btn-secondary btn-sm">

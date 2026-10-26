@@ -11,6 +11,7 @@ import './styles/blueprints.css'
 import './styles/appscan.css'
 import './styles/network.css'
 import './styles/studio.css'
+import './styles/account.css'
 
 window.addEventListener('error', (event) => {
   report('error', event.message || 'Script error', { stack: event.error instanceof Error ? event.error.stack : undefined })

@@ -1,3 +1,4 @@
+import { ACCOUNT_FACTORY_DEPLOYMENTS } from './account.js'
 import { ANCESTORS, type AncestorId } from './ancestors.js'
 import type { PqModuleId } from './modules.js'
 import type { ProfileId } from './profiles.js'
@@ -67,21 +68,77 @@ export interface AppComponent {
   implementation: string
   /** A change the blueprint recommends and reports on, made in your own stack. It does not limit the blueprint's status. */
   advisory?: true
+  /** Where the built component can be used. */
+  href?: string
 }
 
 const DESIGN_ONLY = 'Design only. No Quantum Fork implementation exists.'
 const GUIDANCE = 'Guidance only. The change is made in your own stack with upstream libraries.'
 
+/** Follows the recorded factory: AVAILABLE on Base, TESTNET on Base Sepolia, else EXPERIMENTAL (local chain only). */
+export const ACCOUNT_STATUS: BlueprintStatus = ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'AVAILABLE' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'TESTNET' : 'EXPERIMENTAL'
+const ACCOUNT_WHERE = ACCOUNT_FACTORY_DEPLOYMENTS.base ? 'on Base' : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia'] ? 'on Base Sepolia' : 'on a local test chain'
+const ACCOUNT_BUILT = ACCOUNT_FACTORY_DEPLOYMENTS.base
+  ? 'Built as QForkAccount, a contract deployed on Base.'
+  : ACCOUNT_FACTORY_DEPLOYMENTS['base-sepolia']
+    ? 'Built as QForkAccount, a contract deployed on Base Sepolia with test ETH only.'
+    : 'Built as QForkAccount, a Base contract tested on a local chain and not yet deployed.'
+
 export const COMPONENTS: AppComponent[] = [
   { id: 'hybrid-auth', code: 'AC-01', name: 'HYBRID AUTHORIZATION', summary: 'A withdrawal needs the owner’s Base signature and a separate post-quantum authorization checked by the vault.', primitive: 'secp256k1 ECDSA (Base) + ML-DSA-65 (vault policy)', status: 'RESEARCH', implementation: DESIGN_ONLY },
-  { id: 'pq-keyset', code: 'AC-02', name: 'PQ KEY ARCHITECTURE', summary: 'The vault commits to a hash of its authorized key set, so keys can rotate without moving the assets.', primitive: 'Keccak-256 commitment to a key-set descriptor', status: 'RESEARCH', implementation: DESIGN_ONLY },
-  { id: 'threshold-auth', code: 'AC-03', name: 'THRESHOLD AUTHORIZATION', summary: 'Several owners each hold a key; a set number of them must approve.', primitive: 'm-of-n hybrid approvals', status: 'RESEARCH', implementation: DESIGN_ONLY },
-  { id: 'org-policy', code: 'AC-04', name: 'ORGANIZATION POLICY', summary: 'Roles, limits and approval rules defined by an organization.', primitive: 'Policy engine (not specified)', status: 'COMING SOON', implementation: 'Not yet specified.' },
+  {
+    id: 'pq-keyset',
+    code: 'AC-02',
+    name: 'PQ KEY ARCHITECTURE',
+    summary: 'The account commits to a hash of its ML-DSA and SLH-DSA public keys, so keys can rotate without moving the assets.',
+    primitive: 'Keccak-256 commitment to a key-set descriptor',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} Keys are generated in the browser; owners rotate the commitment by proposal. Base does not verify post-quantum signatures, so the commitment does not authorize anything on its own.`,
+    href: '/account',
+  },
+  {
+    id: 'threshold-auth',
+    code: 'AC-03',
+    name: 'THRESHOLD AUTHORIZATION',
+    summary: 'Several owners each hold a key; a set number of them must approve.',
+    primitive: 'm-of-n owner approvals (secp256k1 wallets)',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} Approvals are ordinary Base wallet transactions, so they are classical, not hybrid.`,
+    href: '/account',
+  },
+  {
+    id: 'org-policy',
+    code: 'AC-04',
+    name: 'ORGANIZATION POLICY',
+    summary: 'Owners, approval thresholds and limits for everyone who acts on the organization’s behalf.',
+    primitive: 'Owner threshold + per-agent limits, freeze and call scopes',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} Every change is a proposal the threshold must approve; any single owner can freeze an agent at once.`,
+    href: '/account',
+  },
   { id: 'pq-recovery', code: 'AC-05', name: 'PQ RECOVERY KEY', summary: 'A hash-based recovery key is committed in advance and revealed only to recover.', primitive: 'SLH-DSA-SHA2-128s', status: 'RESEARCH', implementation: DESIGN_ONLY },
   { id: 'guardian-recovery', code: 'AC-06', name: 'RECOVERY GUARDIANS', summary: 'Named guardians approve a recovery together, each with a post-quantum key.', primitive: 'm-of-n SLH-DSA guardian approvals', status: 'RESEARCH', implementation: DESIGN_ONLY },
   { id: 'signer-transport', code: 'AC-07', name: 'PQ SIGNER TRANSPORT', summary: 'Hybrid post-quantum key exchange between owners and any off-chain signing service.', primitive: 'X25519MLKEM768', status: 'RESEARCH', implementation: GUIDANCE },
-  { id: 'agent-wallets', code: 'AC-08', name: 'AGENT WALLETS', summary: 'Accounts owned by autonomous agents, bounded by their owner.', primitive: 'Hybrid account keys with delegated scopes', status: 'COMING SOON', implementation: 'Not yet specified.' },
-  { id: 'spending-policy', code: 'AC-09', name: 'SPENDING POLICIES', summary: 'Programmable limits on what an agent may spend, where and how often.', primitive: 'Policy engine (not specified)', status: 'COMING SOON', implementation: 'Not yet specified.' },
+  {
+    id: 'agent-wallets',
+    code: 'AC-08',
+    name: 'AGENT WALLETS',
+    summary: 'Agents act for an account inside limits its owners set, and never become owners.',
+    primitive: 'Delegated spender keys (secp256k1) with scoped contract calls',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} An agent is any address: a bot, an AI agent or a person.`,
+    href: '/account',
+  },
+  {
+    id: 'spending-policy',
+    code: 'AC-09',
+    name: 'SPENDING POLICIES',
+    summary: 'Programmable limits on what an agent may spend, where and how often.',
+    primitive: 'Per-asset transfer and rolling-period limits, expiry, recipient allow-list',
+    status: ACCOUNT_STATUS,
+    implementation: `${ACCOUNT_BUILT} The contract enforces every limit; nothing relies on the agent behaving.`,
+    href: '/account',
+  },
   { id: 'permissioning', code: 'AC-10', name: 'VALIDATOR PERMISSIONING', summary: 'Only approved operators may join the validator set.', primitive: 'Allow-listed validator identities', status: 'COMING SOON', implementation: 'Not yet specified. The genome records it without enforcing it.' },
   { id: 'surface-map', code: 'AC-11', name: 'SURFACE MAP', summary: 'A checklist that maps where your application depends on classical public-key cryptography.', primitive: 'Self-reported checklist', status: 'AVAILABLE', implementation: 'Runs in your browser from your answers. Nothing is uploaded.' },
   { id: 'repo-scan', code: 'AC-12', name: 'REPOSITORY SCAN', summary: 'Finds RSA, elliptic-curve and Diffie-Hellman usage, signed tokens, TLS and SSH configuration, committed keys and crypto dependencies in your code.', primitive: 'Static pattern scan', status: 'AVAILABLE', implementation: 'Public GitHub repositories are scanned on the server and discarded; local folders and pasted code are scanned in your browser. It matches patterns in the source text.' },
@@ -374,7 +431,7 @@ export const BLUEPRINTS: Blueprint[] = [
         options: [
           { id: 'one', label: 'One owner', detail: 'A single owner approves withdrawals.', patch: { authorization: 'single-owner' } },
           { id: 'many', label: 'Multiple owners', detail: 'A set number of owners must approve together.', patch: { authorization: 'multi-owner', components: ['threshold-auth'] } },
-          { id: 'org', label: 'Organization', detail: 'Roles and approval rules.', tag: 'COMING SOON', patch: { authorization: 'organization', components: ['threshold-auth', 'org-policy'] } },
+          { id: 'org', label: 'Organization', detail: 'Roles and approval rules.', tag: ACCOUNT_STATUS, patch: { authorization: 'organization', components: ['threshold-auth', 'org-policy'] } },
         ],
       },
       {
@@ -526,7 +583,7 @@ export const BLUEPRINTS: Blueprint[] = [
     index: '05',
     name: 'Quantum AI Economy',
     headline: 'Give autonomous agents their own economy.',
-    description: 'A network where AI agents hold wallets, pay each other and follow spending policies. The network genome can be designed today; registration opens once agent wallets and policies are built.',
+    description: `A network where AI agents hold wallets, pay each other and follow spending policies. Agent wallets and policies already run as a contract ${ACCOUNT_WHERE}; the network itself can be designed and registered, but no chain runs it yet.`,
     category: 'NETWORK',
     visualType: 'agents',
     tone: 'green',
@@ -536,13 +593,13 @@ export const BLUEPRINTS: Blueprint[] = [
     building: 'A Base-derived network for machine-to-machine payments, with accounts owned by agents and limits set by their owners.',
     configures: ['Agent wallets', 'Spending policies', 'Programmable authorization', 'Native asset and fees', 'Machine-to-machine payment throughput', 'Post-quantum profile'],
     securityModel: [
-      'Agent accounts use the same hybrid signatures as every other account on the network.',
-      'Owners would bound what an agent can spend with policies. Policies are not specified yet.',
+      'Agent accounts would use the same hybrid signatures as every other account on the network.',
+      'Owners bound what an agent can spend: per transfer, per period, until an expiry and only to allowed recipients. Any one owner can freeze an agent at once.',
     ],
     remainsClassical: NETWORK_REMAINS_CLASSICAL,
-    infrastructure: [...REGISTERED_INFRA.slice(0, 1), 'Agent wallets and spending policies do not exist, so only the network genome can be designed.'],
-    compatibility: [...NETWORK_COMPAT, { label: 'Agent frameworks', verdict: 'UNSOLVED', detail: 'No agent SDK exists for this network.' }],
-    limitations: ['Agent wallets and spending policies are not built.', 'Registration is disabled for this blueprint until they are.'],
+    infrastructure: [...REGISTERED_INFRA.slice(0, 1), `Agent wallets and spending policies are the QForkAccount contract, running ${ACCOUNT_WHERE}. On Base its keys are classical ECDSA.`],
+    compatibility: [...NETWORK_COMPAT, { label: 'Agent frameworks', verdict: 'PARTIAL', detail: 'Any agent that can send an EVM transaction can spend through QForkAccount. There is no dedicated agent SDK.' }],
+    limitations: [`No chain runs this network yet; agent wallets run ${ACCOUNT_WHERE} only.`, 'On Base, agent and owner keys are ordinary ECDSA wallets, not post-quantum.'],
     recommendedGenome: { ...NETWORK_BASE, pqProfile: 'hybrid', security: 'recommended', authorization: 'agent-policy', components: ['agent-wallets', 'spending-policy'], network: network('AGENT ECONOMY', 'QAGT', 'qf-agent-economy', { baseFeeLamports: 1_000 }) },
     optionalModules: ['vid'],
     requiredCapabilities: ['platform:lab', 'module:cag', 'module:hsp', 'module:pqk', 'component:agent-wallets', 'component:spending-policy'],
@@ -561,8 +618,8 @@ export const BLUEPRINTS: Blueprint[] = [
         prompt: 'Who sets spending limits?',
         defaultOption: 'owner',
         options: [
-          { id: 'owner', label: 'The owner', detail: 'Each agent’s owner sets its limits.', tag: 'COMING SOON', patch: { authorization: 'agent-policy' } },
-          { id: 'org', label: 'An organization', detail: 'Limits come from organization policy.', tag: 'COMING SOON', patch: { authorization: 'organization', components: ['org-policy'] } },
+          { id: 'owner', label: 'The owner', detail: 'Each agent’s owner sets its limits.', tag: ACCOUNT_STATUS, patch: { authorization: 'agent-policy' } },
+          { id: 'org', label: 'An organization', detail: 'Limits come from organization policy.', tag: ACCOUNT_STATUS, patch: { authorization: 'organization', components: ['org-policy'] } },
         ],
       },
       SECURITY_QUESTION,

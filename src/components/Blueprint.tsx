@@ -306,6 +306,11 @@ export function ComponentList({ rows }: { rows: ComponentRow[] }) {
           <div>
             <strong>{row.name}</strong>
             <span>{row.primitive}</span>
+            {row.href && (
+              <Link to={row.href} className="bp-component-link">
+                Use it <ArrowRight size={12} strokeWidth={1.8} />
+              </Link>
+            )}
           </div>
           <BlueprintStatusBadge status={row.status} />
         </li>

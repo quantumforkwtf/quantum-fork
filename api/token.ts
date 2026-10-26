@@ -26,11 +26,11 @@ async function baseToken(context: Context) {
   try {
     const token = base.token as Hex
     const [decimals, supply] = await Promise.all([baseTokenDecimals(context, token), baseTokenSupply(context, token)])
-    const body = { status: 'LIVE' as const, network: base.network, token: base.token, decimals, supplyRaw: supply.toString(), clankerUrl: base.clankerUrl, error: null, fetchedAt: new Date().toISOString() }
+    const body = { status: 'LIVE' as const, network: base.network, token: base.token, decimals, supplyRaw: supply.toString(), tradeUrl: base.tradeUrl, error: null, fetchedAt: new Date().toISOString() }
     await context.store.set(cacheKey, JSON.stringify(body), { ttlSeconds: CACHE_SECONDS }).catch(() => undefined)
     return { ...body, protocol, cached: false }
   } catch {
-    return { status: 'LIVE' as const, network: base.network, token: base.token, decimals: null, supplyRaw: null, clankerUrl: base.clankerUrl, error: 'Base token data is unavailable right now.', protocol }
+    return { status: 'LIVE' as const, network: base.network, token: base.token, decimals: null, supplyRaw: null, tradeUrl: base.tradeUrl, error: 'Base token data is unavailable right now.', protocol }
   }
 }
 

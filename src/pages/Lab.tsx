@@ -267,7 +267,7 @@ function TierPicker({ value, onChange, availability }: { value: DeploymentTier; 
           <button type="button" role="radio" aria-checked={false} disabled className="tier-card is-soon">
             <strong>MAINNET</strong>
             <small>COMING SOON</small>
-            <span>Burn real $QFORK. Opens when $QFORK launches on Base.</span>
+            <span>Register with real $QFORK. Not open yet.</span>
           </button>
         )}
       </div>

@@ -187,6 +187,18 @@
   border-bottom: 1px solid var(--line);
 }
 
+.bp-components .bp-component-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  color: var(--lime);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
 .bp-plan code,
 .bp-components code {
   color: var(--faint);

@@ -55,7 +55,7 @@ export interface ServerStatus {
   tiers: { testnet: TierStatus; mainnet: TierStatus }
   faucet: TierStatus & { amount: number }
   /** Absent on servers from before Base support. */
-  base?: { network: BaseNetwork; chainId: number; token: string | null; tokenStatus: TokenStatus; clankerUrl: string | null; clankerLaunch?: boolean; registry?: string | null; registration: TierStatus }
+  base?: { network: BaseNetwork; chainId: number; token: string | null; tokenStatus: TokenStatus; tradeUrl: string | null; clankerLaunch?: boolean; registry?: string | null; registration: TierStatus }
   issues: { key: string; level: 'error' | 'warning'; message: string }[]
   audit: 'UNAUDITED'
 }

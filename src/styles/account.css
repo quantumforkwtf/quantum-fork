@@ -1,0 +1,494 @@
+/* ---------- QFork accounts ---------- */
+
+.acct {
+  display: grid;
+  gap: 20px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 var(--gutter) 96px;
+}
+
+.acct .page-head {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.acct-title {
+  font-family: var(--mono);
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -0.02em;
+}
+
+.acct-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.acct-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 24px 0 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--line);
+}
+
+.acct-stats div {
+  padding: 14px 16px;
+  background: var(--bg);
+}
+
+.acct-stats dt,
+.acct-kv dt,
+.acct-field > span {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.acct-stats dd {
+  margin: 6px 0 0;
+  font-size: 17px;
+}
+
+.acct-section {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
+.acct-section > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.acct-section h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.acct-section > .btn {
+  justify-self: start;
+}
+
+.acct-you {
+  border-color: color-mix(in srgb, var(--lime) 35%, transparent);
+}
+
+.acct-form {
+  display: grid;
+  gap: 16px;
+}
+
+.acct-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.acct-field {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.acct-field small,
+.acct-asset small {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.acct-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  resize: vertical;
+  transition: border-color 200ms var(--ease);
+}
+
+.acct-input::placeholder {
+  color: var(--faint);
+}
+
+.acct-input:focus {
+  outline: none;
+  border-color: var(--lime);
+}
+
+.acct-input.is-bad {
+  border-color: color-mix(in srgb, var(--red) 70%, transparent);
+}
+
+.acct-bad {
+  color: var(--red) !important;
+}
+
+.acct-pair {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.acct-pair > .acct-input {
+  flex: 1;
+}
+
+.acct-owner-rows,
+.acct-asset {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.acct-owner-rows .acct-pair,
+.acct-asset .acct-input {
+  width: 100%;
+}
+
+.acct-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.02);
+  justify-self: start;
+}
+
+.acct-toggle button {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.acct-toggle button.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--lime);
+}
+
+.acct-stepper {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+}
+
+.acct-stepper button {
+  width: 40px;
+  height: 38px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.acct-stepper button:disabled {
+  color: var(--faint);
+}
+
+.acct-stepper output {
+  min-width: 36px;
+  font-family: var(--mono);
+  text-align: center;
+}
+
+.acct-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.acct-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.acct-pending {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  font-size: 13.5px;
+}
+
+.acct-pending a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--lime);
+}
+
+.acct-addr {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.92em;
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+  word-break: break-all;
+}
+
+.acct-addr:hover {
+  text-decoration-color: var(--lime);
+}
+
+.acct-hash {
+  font-size: 12px;
+  word-break: break-all;
+  color: var(--muted);
+}
+
+.acct-list,
+.acct-agents,
+.acct-owners,
+.acct-index,
+.acct-batch {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.acct-batch {
+  gap: 4px;
+}
+
+.acct-batch li::before {
+  content: '· ';
+  color: var(--muted);
+}
+
+.acct-proposal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.acct-proposal.is-closed {
+  opacity: 0.6;
+}
+
+.acct-proposal-id {
+  align-self: start;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.acct-proposal-body small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.acct-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.acct-count.is-ready {
+  color: var(--lime);
+}
+
+.acct-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  grid-column: 2 / -1;
+}
+
+.acct-agent {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.acct-agent.is-frozen {
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+.acct-agent > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.acct-agent > header .acct-proposal-actions {
+  margin-left: auto;
+}
+
+.acct-allowance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.acct-meter {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.acct-meter span {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+}
+
+.acct-kv {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.acct-kv div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.acct-kv dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.acct-scope {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.acct-owners li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acct-owners .icon-btn {
+  margin-left: auto;
+}
+
+.acct-index a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.acct-index a:hover {
+  border-color: var(--line-2);
+}
+
+.acct-index a svg {
+  margin-left: auto;
+}
+
+.acct-new {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.acct-disclosure.is-open {
+  flex-basis: 100%;
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+}
+
+.acct-disclosure.is-open > .btn {
+  justify-self: start;
+}
+
+.acct-keyset {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+}
+
+@media (max-width: 720px) {
+  .acct-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .acct-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .acct-section {
+    padding: 18px 16px;
+  }
+
+  .acct-kv div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .acct-proposal {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .acct-count {
+    grid-column: 2;
+  }
+}

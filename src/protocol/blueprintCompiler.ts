@@ -63,6 +63,7 @@ export interface ComponentRow {
   status: BlueprintStatus
   source: 'module' | 'component'
   note: string
+  href?: string
 }
 
 export interface CompilerWarning {
@@ -306,7 +307,7 @@ function componentRows(config: DescendantConfig | null, genome: BlueprintGenome)
   }
   for (const id of genome.components) {
     const component = COMPONENT_BY_ID[id]
-    rows.push({ id, code: component.code, name: component.name, primitive: component.primitive, status: component.status, source: 'component', note: component.implementation })
+    rows.push({ id, code: component.code, name: component.name, primitive: component.primitive, status: component.status, source: 'component', note: component.implementation, href: component.href })
   }
   return rows
 }

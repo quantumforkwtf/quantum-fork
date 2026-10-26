@@ -134,7 +134,7 @@ export function resolveConfig(env: Env, prefix = ''): { config: PublicConfig; is
 /** Whether a tier may register a descendant with a real, server-verified burn under this configuration. */
 export function tierAvailability(config: PublicConfig, tier: 'testnet' | 'mainnet'): { available: boolean; reason: string } {
   if (tier === 'mainnet') {
-    if (config.network !== 'mainnet-beta') return { available: false, reason: 'Mainnet registration opens when $QFORK launches. This site runs on devnet.' }
+    if (config.network !== 'mainnet-beta') return { available: false, reason: 'Mainnet registration with $QFORK is not open yet. This site runs on devnet.' }
     if (!config.flags.mainnetDeployments) return { available: false, reason: 'Mainnet registration is switched off (ENABLE_MAINNET_DEPLOYMENTS).' }
     if (!config.flags.realBurns || !config.mint) return { available: false, reason: 'No live $QFORK mint is configured, or burns are switched off.' }
     return { available: true, reason: 'Burns real $QFORK, verified on-chain by the server.' }

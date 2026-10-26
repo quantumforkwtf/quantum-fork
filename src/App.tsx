@@ -31,6 +31,8 @@ const Mutation = lazy(() => import('./pages/Mutation'))
 const QuantumShield = lazy(() => import('./pages/QuantumShield'))
 const Explore = lazy(() => import('./pages/Explore'))
 const ExploreDetail = lazy(() => import('./pages/Explore').then((module) => ({ default: module.ExploreDetail })))
+const Accounts = lazy(() => import('./pages/Account'))
+const AccountConsole = lazy(() => import('./pages/Account').then((module) => ({ default: module.AccountConsole })))
 
 const REDIRECTS: Record<string, string> = { '/token': '/qfork', '/scan': '/quantumize' }
 
@@ -69,6 +71,9 @@ function Route() {
   if (path === '/explore') return <Explore />
   const explored = path.match(/^\/explore\/(0x[0-9a-f]{64})\/?$/)
   if (explored) return <ExploreDetail hash={explored[1]} />
+  if (path === '/account' || path === '/account/') return <Accounts />
+  const account = path.match(/^\/account\/(0x[0-9a-fA-F]{40})\/?$/)
+  if (account) return <AccountConsole key={account[1].toLowerCase()} address={account[1] as `0x${string}`} />
   if (path === '/species' || path === '/species/') return <Species />
   if (path === '/qfork') return <QFork />
   if (path === '/security') return <Security />

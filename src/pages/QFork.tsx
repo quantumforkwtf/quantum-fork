@@ -11,7 +11,7 @@ import { copyText } from '../lib/toast'
 import { shortAddress } from '../protocol/address'
 import { BURN_OPERATIONS, type BurnOperationSpec } from '../protocol/burnEngine'
 import { PQ_MODULES } from '../protocol/modules'
-import { baseExplorerAddress, type BaseNetwork } from '../protocol/base'
+import { baseExplorerAddress, type BaseNetwork, QFORK_MARKET } from '../protocol/base'
 import { CHAIN_BURN_SCALE, formatBaseUnits, PRICING } from '../protocol/pricing'
 import { Link } from '../router'
 import { FinalWord } from './Home'
@@ -28,7 +28,7 @@ interface BaseToken {
   token: string | null
   decimals?: number | null
   supplyRaw?: string | null
-  clankerUrl?: string | null
+  tradeUrl?: string | null
   error?: string | null
   protocol: { burnedWhole: string; burnCount: number; source: string } | null
 }
@@ -39,9 +39,9 @@ const BRIEF = `QUANTUM FORK ($QFORK)
 POST-QUANTUM BLOCKCHAIN LAB
 
 Build for the quantum future. No code required.
-Choose what to build: a chain, a vault, a payment network, a private network or an AI economy. Burn $QFORK to launch it.
+Choose what to build: a chain, a vault, a payment network, a private network or an AI economy, and design it in the lab.
 
-$QFORK is an ERC-20 on Base. It is burned with the token's own burn(), never sent to a wallet. Supply goes down.
+$QFORK is the token of Quantum Fork, an ERC-20 on Base. It launched on ${QFORK_MARKET.launchpad} and trades on ${QFORK_MARKET.dex}.
 Nothing here is a promise of returns.
 
 ${CLIENT_CONFIG.siteUrl}
@@ -76,13 +76,13 @@ function useToken() {
 }
 
 export default function QFork() {
-  usePageMeta({ title: '$QFORK', description: '$QFORK is burned to launch post-quantum descendants. Live token data, burn mechanics and risks.', path: '/qfork' })
+  usePageMeta({ title: '$QFORK', description: '$QFORK, the token of the Quantum Fork post-quantum blockchain lab, on Base. Contract, live token data and plain terms.', path: '/qfork' })
   const { load, refresh } = useToken()
   const data = load.state === 'ok' ? load.data : null
   const base = data?.base ?? null
   const live = base?.status === 'LIVE' && Boolean(base.token)
   const token = live ? (base?.token ?? null) : null
-  const clankerUrl = live ? (base?.clankerUrl ?? null) : null
+  const tradeUrl = live ? (base?.tradeUrl ?? null) : null
   const baseName = base?.network === 'base-sepolia' ? 'Base Sepolia' : 'Base'
   const registration = useRegistrationLabel()
 
@@ -96,13 +96,14 @@ export default function QFork() {
           <h1>$QFORK</h1>
           <p className="token-sub">The fuel that launches a descendant.</p>
           <p className="section-lede">
-            $QFORK is an ERC-20 on Base. It is burned to commission a post-quantum descendant, with the token’s own burn() function: tokens are destroyed and total supply
-            falls. It is never a transfer to a “dead” wallet.
+            {live
+              ? `$QFORK is the token of Quantum Fork, an ERC-20 on Base. It launched on ${QFORK_MARKET.launchpad} and trades on ${QFORK_MARKET.dex}. Registering descendants with $QFORK is not open yet.`
+              : '$QFORK is the token of Quantum Fork, an ERC-20 on Base.'}
           </p>
           <div className="hero-ctas">
-            {clankerUrl ? (
-              <a href={clankerUrl} target="_blank" rel="noreferrer noopener" className="btn btn-primary btn-lg">
-                Trade on Clanker <ExternalLink size={15} strokeWidth={1.8} />
+            {tradeUrl ? (
+              <a href={tradeUrl} target="_blank" rel="noreferrer noopener" className="btn btn-primary btn-lg">
+                Trade on Uniswap <ExternalLink size={15} strokeWidth={1.8} />
               </a>
             ) : (
               <button type="button" className="btn btn-primary btn-lg" disabled>
@@ -153,7 +154,7 @@ export default function QFork() {
         {data && !live && (
           <div className="data-panel panel">
             <p>
-              $QFORK has not launched. It launches on Base through Clanker. Until it does, this page shows no price, market cap, holder count or chart, and nothing in the lab burns
+              $QFORK has not launched. It launches on Base. Until it does, this page shows no price, market cap, holder count or chart, and nothing in the lab burns
               real tokens. When it launches, the contract address is set in one place on the server and every number here is read from the chain.
             </p>
           </div>
@@ -213,13 +214,9 @@ export default function QFork() {
           <p className="eyebrow">Plain terms</p>
           <h2 id="terms-title">What $QFORK is, and isn’t.</h2>
           <ul className="notes">
-            <li>A utility token burned to launch descendants in the lab. Not equity, not a claim on revenue, not a promise of returns.</li>
-            <li>
-              {NET.mainnet
-                ? 'A descendant is registered by burning $QFORK. The burn is permanent and nothing is sent to a wallet.'
-                : 'Mainnet registration is not open yet. Today a descendant is registered by burning test QFORK, which has no value.'}
-            </li>
-            <li>A burn is credited only after the server verifies it on-chain, in a finalized block on Base.</li>
+            <li>The utility token of the Quantum Fork lab. Not equity, not a claim on revenue, not a promise of returns.</li>
+            <li>Registering descendants with $QFORK on Base is not open yet. The token contract has no burn() function, so the lab’s burn-based registration cannot use it as it stands.</li>
+            <li>Any registration payment is credited only after the server verifies it on-chain, in a finalized block on Base.</li>
             <li>Post-quantum modules are designs, not shipped code. A descendant is post-quantum oriented, not quantum-proof.</li>
           </ul>
         </div>
@@ -234,15 +231,15 @@ export default function QFork() {
           </div>
           <div>
             <dt>Launch</dt>
-            <dd>Clanker{live ? '' : ' (pending)'}</dd>
+            <dd>{live ? QFORK_MARKET.launchpad : 'Pending'}</dd>
           </div>
           <div>
             <dt>Contract</dt>
             <dd>{token ? shortAddress(token, 6, 6) : 'Published at launch'}</dd>
           </div>
           <div>
-            <dt>Burn mechanism</dt>
-            <dd>ERC-20 burn() + registration tag</dd>
+            <dt>Trades on</dt>
+            <dd>{live ? `${QFORK_MARKET.dex} · ${QFORK_MARKET.pair}` : 'Pending'}</dd>
           </div>
         </dl>
       </section>

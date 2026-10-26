@@ -17,6 +17,9 @@ export const ERC20_BURN_ABI = parseAbi([
   'event Transfer(address indexed from, address indexed to, uint256 value)',
 ])
 
+/** Where $QFORK launched and trades. Its contract has no burn() function. */
+export const QFORK_MARKET = { launchpad: 'o1', dex: 'Uniswap v4', pair: 'QFORK/ETH' } as const
+
 const ZERO = '0x0000000000000000000000000000000000000000'
 /** burn(uint256) selector + one 32-byte argument + the 32-byte deployment tag. */
 const BURN_CALLDATA_BYTES = 4 + 32 + 32
@@ -29,7 +32,8 @@ export interface BaseConfig {
   deployments: boolean
   /** Descendant owners may launch tokens through the Clanker v4 factory. */
   clankerLaunch: boolean
-  clankerUrl: string | null
+  /** Where $QFORK trades (Uniswap on Base). Null until the token is LIVE on Base mainnet. */
+  tradeUrl: string | null
   /** QForkRegistry on this Base network. Null until it is deployed and configured. */
   registry: Hex | null
 }
@@ -91,8 +95,8 @@ export function resolveBaseConfig(env: Env, prefix = ''): { config: BaseConfig; 
     else issues.push({ key: key('QFORK_REGISTRY_ADDRESS'), level: 'error', message: 'QFORK_REGISTRY_ADDRESS is not a valid 0x address. Anchoring is disabled.' })
   }
 
-  const clankerUrl = token && tokenStatus === 'LIVE' && network === 'base' ? `https://www.clanker.world/clanker/${token}` : null
-  return { config: { network, chainId: BASE_CHAIN_ID[network], token, tokenStatus, deployments, clankerLaunch, clankerUrl, registry }, issues }
+  const tradeUrl = token && tokenStatus === 'LIVE' && network === 'base' ? `https://app.uniswap.org/swap?chain=base&outputCurrency=${token}` : null
+  return { config: { network, chainId: BASE_CHAIN_ID[network], token, tokenStatus, deployments, clankerLaunch, tradeUrl, registry }, issues }
 }
 
 /** Which registration tier a Base network maps to. */

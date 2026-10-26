@@ -27,7 +27,7 @@ export const { GET, POST } = route('status', {
         chainId: context.env.base.chainId,
         token: context.env.base.token,
         tokenStatus: context.env.base.tokenStatus,
-        clankerUrl: context.env.base.clankerUrl,
+        tradeUrl: context.env.base.tradeUrl,
         clankerLaunch: context.env.base.clankerLaunch,
         registry: context.env.base.registry,
         registration: baseAvailability(context.env.base, context.store.persistent),
